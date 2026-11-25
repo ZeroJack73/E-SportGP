@@ -1,0 +1,4 @@
+<nav class="p-tabs mb-0 border rounded-top">
+  <a href="{% url 'panel:productos' %}" class="{% if tab == 'productos' %}activa{% endif %}">Productos ({{ total_productos }})</a>
+  <a href="{% url 'panel:categorias' %}" class="{% if tab == 'categorias' %}activa{% endif %}">Categorías</a>
+</nav>

@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}{{ producto.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-xl">
+  <nav class="sp-breadcrumb mb-3" aria-label="breadcrumb">
+    <a href="{% url 'tienda:inicio' %}">Inicio</a> &nbsp;/&nbsp;
+    <a href="{% url 'tienda:inicio' %}">Catálogo</a> &nbsp;/&nbsp;
+    <a href="{{ producto.deporte.get_absolute_url }}">{{ producto.deporte.nombre }}</a> &nbsp;/&nbsp;
+    <span>{{ producto.nombre }}</span>
+  </nav>
+  <a href="{{ volver }}" class="pd-volver"><i class="bi bi-arrow-left me-2"></i>Volver al catálogo</a>
+
+  <div class="row g-5 mt-0">
+    <!-- Columna izquierda: galeria, descripcion y opiniones -->
+    <div class="col-lg-7">
+      <div class="pd-galeria" data-galeria>
+        {% if galeria|length > 1 %}
+        <div class="pd-galeria__miniaturas" role="tablist" aria-label="Vistas del producto">
+          {% for foto in galeria %}
+            <button type="button" class="pd-mini {% if forloop.first %}activa{% endif %}" data-foto="{{ forloop.counter0 }}"
+                    data-url="{{ foto.url }}" data-etiqueta="{{ foto.etiqueta }}" aria-label="{{ foto.etiqueta }}">
+              <img src="{{ foto.url }}" alt="">
+              <span>{{ foto.etiqueta|cut:"Vista "|capfirst }}</span>
+            </button>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="pd-galeria__principal">
+          <div class="pd-foto">
+            {% if galeria %}
+              <img src="{{ galeria.0.url }}" alt="{{ producto.nombre }} - {{ galeria.0.etiqueta }}" data-foto-principal>
+              {% if galeria|length > 1 %}
+                <button type="button" class="pd-foto__nav pd-foto__nav--prev" data-paso="-1" aria-label="Foto anterior"><i class="bi bi-chevron-left"></i></button>
+                <button type="button" class="pd-foto__nav pd-foto__nav--next" data-paso="1" aria-label="Foto siguiente"><i class="bi bi-chevron-right"></i></button>
+              {% endif %}
+            {% else %}
+              <div class="producto-card__placeholder"><i class="bi bi-image fs-1"></i><span>Foto de producto &middot; {{ producto.etiqueta_imagen }}</span></div>
+            {% endif %}
+            {% if producto.es_nuevo %}<span class="producto-card__badge">NUEVO</span>{% endif %}
+          </div>
+          <div class="pd-galeria__contador">
+            <span data-foto-etiqueta>{{ galeria.0.etiqueta|default:"" }}</span>
+            <span><span data-foto-num>01</span> / {{ galeria|length|stringformat:"02d" }}</span>
+          </div>
+        </div>
+      </div>
+
+      <section class="pd-seccion">
+        <h2 class="pd-h2">Descripción</h2>
+        <p class="pd-texto">{{ producto.descripcion|linebreaksbr }}</p>
+        {% if producto.material %}
+          <h3 class="pd-h3">Material</h3>
+          <p class="pd-texto small mb-0">{{ producto.material }}</p>
+        {% endif %}
+      </section>
+
+      <section class="pd-seccion" id="opiniones">
+        <div class="d-flex justify-content-between align-items-baseline mb-3">
+          <h2 class="pd-h2 mb-0">Opiniones de clientes</h2>
+          {% if resumen.total %}<span class="fw-bold">{{ resumen.promedio|stringformat:".1f" }} / 5</span>{% endif %}
+        </div>
+        {% for o in opiniones %}
+          <article class="pd-opinion">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="pd-estrellas">{% for e in o.calificacion|estrellas %}<i class="bi bi-star{% if e == 'llena' %}-fill{% elif e == 'media' %}-half{% endif %}"></i>{% endfor %}</span>
+              <span class="pd-opinion__autor">{{ o.nombre }}</span>
+              {% if o.verificada %}<span class="pd-opinion__meta">&middot; <i class="bi bi-patch-check me-1"></i>Compra verificada</span>{% endif %}
+            </div>
+            <p class="mb-0">"{{ o.comentario }}"</p>
+          </article>
+        {% empty %}
+          <p class="pd-texto"><i class="bi bi-chat-square-text me-2"></i>Aún no hay opiniones de este producto.</p>
+        {% endfor %}
+      </section>
+    </div>
+
+    <!-- Columna derecha: compra -->
+    <div class="col-lg-5">
+      <div class="pd-compra">
+        <div class="pd-marca">{{ producto.marca.nombre }} / {{ producto.deporte.nombre|upper }}</div>
+        <h1 class="pd-titulo">{{ producto.nombre }}</h1>
+
+        {% if resumen.total %}
+          <a href="#opiniones" class="pd-rating">
+            <span class="pd-estrellas">{% for e in resumen.promedio|estrellas %}<i class="bi bi-star{% if e == 'llena' %}-fill{% elif e == 'media' %}-half{% endif %}"></i>{% endfor %}</span>
+            <span>{{ resumen.promedio|stringformat:".1f" }} &middot; {{ resumen.total }} opinion{{ resumen.total|pluralize:"es" }}</span>
+          </a>
+        {% endif %}
+
+        <div class="pd-precio">{{ producto.precio|moneda }}</div>
+        <div class="pd-iva">IVA incluido</div>
+        <hr class="my-4">
+
+        <form id="form-agregar" method="post" action="#" novalidate>
+          {% csrf_token %}
+          <div class="pd-estado mb-4">
+            <span class="pd-estado__titulo" data-estado>Disponible</span>
+            <span class="pd-estado__detalle" data-estado-detalle></span>
+          </div>
+
+          {% if tallas %}
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="pd-label">Talla{% if es_calzado %} (MX / cm){% endif %}</span>
+              {% if guia %}<button type="button" class="pd-link" data-guia-tallas>Ver guía de tallas</button>{% endif %}
+            </div>
+            <div class="d-flex flex-wrap gap-2" role="radiogroup" aria-label="Talla">
+              {% for t in tallas %}
+                <button type="button" class="pd-talla" data-talla="{{ t.nombre }}" role="radio" aria-checked="false">{{ t.nombre }}</button>
+              {% endfor %}
+            </div>
+            <div class="pd-ayuda mt-2" data-talla-ayuda></div>
+          </div>
+          {% endif %}
+
+          {% if colores %}
+          <div class="mb-4">
+            <span class="pd-label d-block mb-2">Color: <span class="fw-semibold" data-color-nombre></span></span>
+            <div class="d-flex align-items-center flex-wrap gap-3" role="radiogroup" aria-label="Color">
+              {% for c in colores %}
+                <button type="button" class="pd-color" data-color="{{ c.nombre }}" style="--swatch: {{ c.hex }};" role="radio" aria-checked="false" title="{{ c.nombre }}">
+                  <span class="visually-hidden">{{ c.nombre }}</span>
+                </button>
+              {% endfor %}
+              <span class="pd-ayuda" data-color-ayuda></span>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if user.is_staff %}
+          <div class="pd-envio mb-3">
+            <i class="bi bi-shield-lock"></i>
+            <div>
+              <div class="fw-semibold">Vista de administrador</div>
+              <div class="pd-ayuda mb-2">Las cuentas de administración no pueden comprar. Revisa stock y variantes desde el panel.</div>
+              <a href="{% url 'panel:producto_editar' producto.pk %}" class="btn btn-sm btn-primary me-2"><i class="bi bi-pencil me-1"></i>Editar producto</a>
+              <a href="{% url 'panel:inventario' %}?q={{ producto.nombre|urlencode }}" class="btn btn-sm btn-outline-secondary bg-white"><i class="bi bi-boxes me-1"></i>Ver inventario</a>
+            </div>
+          </div>
+          {% endif %}
+          <div class="mb-4 {% if user.is_staff %}d-none{% endif %}">
+            <label class="pd-label d-block mb-2" for="cantidad">Cantidad</label>
+            <div class="d-flex align-items-center gap-3">
+              <div class="pd-cantidad">
+                <button type="button" data-cantidad="-1" aria-label="Restar"><i class="bi bi-dash-lg"></i></button>
+                <input type="number" id="cantidad" name="cantidad" value="1" min="1" inputmode="numeric">
+                <button type="button" data-cantidad="1" aria-label="Sumar"><i class="bi bi-plus-lg"></i></button>
+              </div>
+              <span class="pd-ayuda" data-maximo></span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 pd-agregar {% if user.is_staff %}d-none{% endif %}" data-btn-agregar>
+            <i class="bi bi-cart3 me-2"></i><span>Agregar al carrito</span>
+          </button>
+        </form>
+
+        <div class="pd-envio mt-4">
+          <i class="bi bi-truck"></i>
+          <div>
+            <div class="fw-semibold">Envío gratis desde ${{ envio_gratis_desde }} USD</div>
+            <div class="pd-ayuda">Devoluciones dentro de 30 días. Compra con confianza.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if relacionados %}
+    <h2 class="pd-h2 mt-5 mb-3">También te puede interesar</h2>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+      {% for p in relacionados %}<div class="col">{% include 'includes/card_producto.html' %}</div>{% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+{{ variantes_json|json_script:"pd-variantes" }}
+{{ guia|json_script:"pd-guia" }}
+{% url 'carrito:agregar' 0 as url_agregar %}
+<div hidden data-pd-config data-url-agregar="{{ url_agregar }}" data-url-carrito="{% url 'carrito:detalle' %}"
+     data-producto="{{ producto.nombre }}" data-calzado="{{ es_calzado|yesno:'1,0' }}"></div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}<script src="{% static 'js/producto.js' %}"></script>
+{% endblock %}

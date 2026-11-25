@@ -1,0 +1,9 @@
+<div class="p-paginacion">
+  <span>{% if pagina.paginator.count %}{{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}{% else %}0{% endif %} {{ etiqueta }}{% if nota %} &middot; {{ nota }}{% endif %}</span>
+  {% if pagina.has_other_pages %}
+  <div class="d-flex gap-2">
+    {% if pagina.has_previous %}<a class="btn btn-outline-secondary" href="{% querystring page=pagina.previous_page_number %}">Anterior</a>{% else %}<span class="btn btn-outline-secondary disabled">Anterior</span>{% endif %}
+    {% if pagina.has_next %}<a class="btn btn-outline-secondary" href="{% querystring page=pagina.next_page_number %}">Siguiente</a>{% else %}<span class="btn btn-outline-secondary disabled">Siguiente</span>{% endif %}
+  </div>
+  {% endif %}
+</div>

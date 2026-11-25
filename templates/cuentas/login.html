@@ -1,0 +1,34 @@
+{% extends 'cuentas/base_auth.html' %}
+{% load ui %}
+{% block title %}Iniciar sesión{% endblock %}
+
+{% block paso %}01 / Acceso{% endblock %}
+{% block h1 %}Qué bueno verte de nuevo{% endblock %}
+{% block sub %}Inicia sesión y sigue donde lo dejaste.{% endblock %}
+
+{% block form %}
+<form method="post" class="needs-validation" novalidate>
+  {% csrf_token %}
+  {% include 'includes/form_errores.html' %}
+  <input type="hidden" name="next" value="{{ next }}">
+
+  {% campo_simple form.username %}
+  {% campo_simple form.password password=True %}
+
+  <div class="text-end mb-4">
+    <a class="small-link" href="{% url 'cuentas:password_reset' %}">¿Olvidaste tu contraseña?</a>
+  </div>
+
+  <button type="submit" class="btn btn-primary w-100" data-loading="Iniciando sesión">Iniciar sesión</button>
+</form>
+
+<div class="auth__nota mt-4">
+  <div class="auth__nota-titulo">Acceso por rol</div>
+  <div class="auth__nota-texto">Cliente o Admin, según los permisos de tu cuenta.</div>
+</div>
+
+<p class="text-center mt-4 mb-0" style="font-size: .78rem;">
+  <span class="text-secondary">¿Aún no tienes una cuenta?</span>
+  <a class="fw-semibold ms-1" href="{% url 'cuentas:registro' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Crear cuenta</a>
+</p>
+{% endblock %}

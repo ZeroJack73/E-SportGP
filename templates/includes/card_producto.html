@@ -1,0 +1,25 @@
+{% load ui %}<a href="{{ p.get_absolute_url }}" class="producto-card {% if not p.en_stock %}producto-card--agotado{% endif %}">
+  <div class="producto-card__img">
+    {% if p.imagen %}
+      <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}" loading="lazy">
+    {% else %}
+      <div class="producto-card__placeholder"><i class="bi bi-image"></i><span>{{ p.deporte.nombre }}</span></div>
+    {% endif %}
+    {% if p.es_nuevo %}<span class="producto-card__badge">NUEVO</span>{% endif %}
+  </div>
+  <div class="producto-card__body">
+    <div class="producto-card__marca">{{ p.marca.nombre }}</div>
+    <div class="producto-card__nombre">{{ p.nombre }}</div>
+    <div class="producto-card__precio">{{ p.precio|moneda }}</div>
+    <div class="producto-card__estado">
+      {% if not p.en_stock %}
+        <span>Agotado</span>
+      {% elif p.pocas_unidades %}
+        <span class="estado--pocas">Últimas {{ p.stock }} unidad{{ p.stock|pluralize:"es" }}</span>
+      {% else %}
+        <span>Disponible</span>
+      {% endif %}
+      <i class="bi bi-chevron-right"></i>
+    </div>
+  </div>
+</a>

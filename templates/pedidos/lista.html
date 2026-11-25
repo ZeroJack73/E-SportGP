@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Mis pedidos{% endblock %}
+
+{% block content %}
+<div class="container-xl">
+  <nav class="sp-breadcrumb" aria-label="breadcrumb">
+    <a href="{% url 'tienda:inicio' %}">Inicio</a> &nbsp;/&nbsp;
+    <a href="{% url 'cuentas:perfil' %}">Mi cuenta</a> &nbsp;/&nbsp; <span>Mis pedidos</span>
+  </nav>
+  <h1 class="sp-h1">Mis pedidos</h1>
+  <p class="sp-sub mb-4">Consulta el estado de tus compras y encuentra todos sus detalles.</p>
+
+  {% include 'cuentas/_tabs.html' with tab='pedidos' %}
+
+  {% if pedidos.paginator.count %}
+  <div class="sp-panel">
+    <div class="table-responsive">
+      <table class="sp-tabla">
+        <thead><tr><th>Número de pedido</th><th>Fecha</th><th>Importe</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody>
+          {% for p in pedidos %}
+          <tr class="{% if sel and p.pk == sel.pk %}seleccionado{% endif %}">
+            <td class="fw-bold">{{ p.codigo }}</td>
+            <td>{{ p.creado|date:"j b. Y" }}</td>
+            <td>{{ p.total|moneda }}</td>
+            <td><span class="estado {{ p.clase_estado }}">{{ p.get_estado_display }}</span></td>
+            <td><a class="link-mini" href="{% querystring pedido=p.codigo %}#detalle">Ver detalle<i class="bi bi-arrow-right ms-1"></i></a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% include 'includes/paginacion.html' with pagina=pedidos etiqueta="pedidos" %}
+
+  {% if sel %}
+  <div class="row g-4 mt-2" id="detalle">
+    <!-- Detalle del pedido -->
+    <div class="col-lg-7">
+      <section class="sp-panel">
+        <div class="sp-panel__cuerpo">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <h2 class="fs-5 fw-bold mb-0">Pedido {{ sel.codigo }}</h2>
+            <span class="estado {{ sel.clase_estado }}">{{ sel.get_estado_display }}</span>
+          </div>
+          <p class="sp-meta mb-4">
+            {{ sel.creado|date:"j b. Y" }} &middot; {{ sel.get_metodo_entrega_display }} &middot;
+            {% if sel.pagado_en %}Pago en línea aprobado{% elif sel.estado == 'cancelado' %}Pedido cancelado{% else %}Pago pendiente{% endif %}
+          </p>
+
+          {% for item in sel.items.all %}
+            <div class="d-flex justify-content-between small mb-2 gap-3">
+              <span class="fw-semibold">{{ item.producto.nombre }}{% if item.variante.descripcion_corta %} &middot; {{ item.variante.descripcion_corta }}{% elif item.detalle_variante %} &middot; {{ item.detalle_variante }}{% endif %}</span>
+              <span class="text-nowrap">{{ item.cantidad }} &times; {{ item.precio|moneda }}</span>
+            </div>
+          {% endfor %}
+
+          <div class="sp-meta mt-3 mb-3">
+            {% if sel.es_domicilio %}
+              <i class="bi bi-geo-alt me-1"></i>{{ sel.direccion_alias }}: {{ sel.direccion_texto|linebreaksbr }}
+            {% elif sel.sucursal %}
+              <i class="bi bi-shop me-1"></i>Retiro en {{ sel.sucursal.nombre }} &middot; {{ sel.sucursal.direccion }}
+            {% endif %}
+          </div>
+
+          <div class="fw-bold mb-4">
+            Total {% if sel.pagado_en %}pagado{% endif %}: {{ sel.total|moneda }} &middot;
+            {% if sel.envio %}Envío {{ sel.envio|moneda }}{% elif sel.es_domicilio %}Envío gratis{% else %}Retiro sin costo{% endif %}
+          </div>
+
+          <div class="d-flex flex-wrap align-items-center gap-3">
+            {% if sel.estado == 'pendiente_pago' %}
+              <a href="{% url 'pedidos:pasarela' sel.codigo %}" class="btn btn-primary px-4"><i class="bi bi-credit-card me-2"></i>Pagar ahora</a>
+            {% endif %}
+            {% if sel.puede_cancelarse %}
+              <form method="post" action="{% url 'pedidos:cancelar' sel.codigo %}" data-cancelar-pedido
+                    data-codigo="{{ sel.codigo }}" data-reembolso="{{ sel.requiere_reembolso|yesno:'1,0' }}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-secondary px-4">Cancelar pedido</button>
+              </form>
+            {% endif %}
+            <span class="sp-meta">
+              {% if sel.puede_cancelarse %}Disponible solo en Pendiente de pago, Pagado o En preparación.
+              {% elif sel.estado != 'cancelado' %}<i class="bi bi-info-circle me-1"></i>Este pedido ya no puede cancelarse.{% endif %}
+            </span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Lateral: calificar o seguimiento -->
+    <div class="col-lg-5">
+      {% if sel.estado == 'entregado' %}
+        <div class="resumen">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <div class="fw-bold">{{ sel.codigo }}</div>
+            <span class="estado estado--info">Entregado</span>
+          </div>
+          <div class="sp-meta mb-3">Entregado el {{ sel.entregado_en|default:sel.actualizado|date:"j b. Y" }}. Cuéntanos qué tal te fue.</div>
+          {% for c in calificables %}
+            <div class="d-flex justify-content-between align-items-center gap-3 py-2 {% if not forloop.last %}border-bottom{% endif %}">
+              <span class="small fw-semibold">{{ c.item.producto.nombre }}</span>
+              {% if c.calificado %}
+                <button type="button" class="link-mini text-nowrap" data-calificar data-producto="{{ c.item.producto_id }}" data-nombre="{{ c.item.producto.nombre }}"><i class="bi bi-check2 me-1"></i>Calificado &middot; Editar</button>
+              {% else %}
+                <button type="button" class="btn btn-primary btn-sm text-nowrap" data-calificar data-producto="{{ c.item.producto_id }}" data-nombre="{{ c.item.producto.nombre }}">Calificar producto</button>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% elif sel.estado != 'cancelado' %}
+        {% with e=sel.estado %}
+        <div class="resumen">
+          <div class="fw-bold mb-3">Seguimiento del pedido</div>
+          <ul class="list-unstyled mb-0 small">
+            <li class="mb-2 {% if e != 'pendiente_pago' %}text-primary fw-semibold{% else %}text-secondary{% endif %}"><i class="bi {% if e != 'pendiente_pago' %}bi-check-circle-fill{% else %}bi-circle{% endif %} me-2"></i>Pago aprobado</li>
+            <li class="mb-2 {% if e == 'en_preparacion' or e == 'enviado' or e == 'listo_retiro' %}text-primary fw-semibold{% else %}text-secondary{% endif %}"><i class="bi {% if e == 'en_preparacion' or e == 'enviado' or e == 'listo_retiro' %}bi-check-circle-fill{% else %}bi-circle{% endif %} me-2"></i>En preparación</li>
+            <li class="mb-2 {% if e == 'enviado' or e == 'listo_retiro' %}text-primary fw-semibold{% else %}text-secondary{% endif %}"><i class="bi {% if e == 'enviado' or e == 'listo_retiro' %}bi-check-circle-fill{% else %}bi-circle{% endif %} me-2"></i>{% if sel.es_domicilio %}Enviado{% else %}Listo para retirar{% endif %}</li>
+            <li class="text-secondary"><i class="bi bi-circle me-2"></i>Entregado</li>
+          </ul>
+          {% if sel.entrega_desde %}<div class="sp-meta mt-3"><i class="bi bi-calendar3 me-1"></i>{% if sel.es_domicilio %}Entrega estimada{% else %}Disponible para retirar{% endif %}: {{ sel.entrega_desde|date:"j b." }}–{{ sel.entrega_hasta|date:"j b. Y" }}</div>{% endif %}
+        </div>
+        {% endwith %}
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="sp-panel text-center py-5">
+    <i class="bi bi-bag text-secondary" style="font-size: 3rem;"></i>
+    <h2 class="pd-h2 mt-3">Aún no tienes pedidos</h2>
+    <p class="sp-meta">Cuando hagas tu primera compra la verás aquí.</p>
+    <a href="{% url 'tienda:inicio' %}" class="btn btn-primary px-4">Ir al catálogo</a>
+  </div>
+  {% endif %}
+</div>
+
+{% if sel %}<div hidden data-calificar-url="{% url 'pedidos:calificar' sel.codigo %}">{% csrf_token %}</div>{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const escapar = (t) => { const d = document.createElement('div'); d.textContent = t ?? ''; return d.innerHTML; };
+  const swalSP = { popup: 'swal-sp', htmlContainer: 'swal-sp__html', actions: 'swal-sp__acciones swal-sp__acciones--fila',
+                   confirmButton: 'btn btn-primary', cancelButton: 'btn btn-outline-secondary', closeButton: 'swal-sp__cerrar' };
+
+  // Cancelar pedido (SweetAlert2)
+  document.querySelectorAll('[data-cancelar-pedido]').forEach((form) => {
+    form.addEventListener('submit', (ev) => {
+      if (form.dataset.ok) return;
+      ev.preventDefault();
+      const reembolso = form.dataset.reembolso === '1'
+        ? 'Como ya pagaste, el reembolso se realizará al método original en 5 a 10 días hábiles.'
+        : 'Aún no se ha realizado ningún cobro.';
+      Swal.fire({
+        html: `<div class="swal-sp__eyebrow">${escapar(form.dataset.codigo)}</div>
+               <h2 class="swal-sp__h">¿Cancelar este pedido?</h2>
+               <p class="swal-sp__p mb-0">Se cancelarán todos los artículos.<br>${reembolso}</p>`,
+        width: 480, showCancelButton: true, reverseButtons: true, focusCancel: true, buttonsStyling: false,
+        confirmButtonText: 'Sí, cancelar pedido', cancelButtonText: 'Conservar pedido',
+        customClass: { ...swalSP, confirmButton: 'btn btn-danger' },
+      }).then((r) => { if (r.isConfirmed) { form.dataset.ok = '1'; form.submit(); } });
+    });
+  });
+
+  // Calificar producto (SweetAlert2 + fetch)
+  const urlEl = document.querySelector('[data-calificar-url]');
+  const csrf = document.querySelector('[name=csrfmiddlewaretoken]');
+  document.querySelectorAll('[data-calificar]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      let nota = 0;
+      Swal.fire({
+        html: `<h2 class="swal-sp__h">Calificar producto</h2>
+               <p class="swal-sp__p">${escapar(btn.dataset.nombre)}</p>
+               <div class="small mb-2">Tu calificación &middot; 1 a 5 estrellas</div>
+               <div class="calificar-estrellas" role="radiogroup" aria-label="Calificación">
+                 ${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-n="${n}" role="radio" aria-label="${n} estrella${n > 1 ? 's' : ''}"><i class="bi bi-star"></i></button>`).join('')}
+               </div>
+               <div class="sp-meta mt-2 mb-3" data-nota-texto>Selecciona una estrella</div>
+               <label class="form-label" for="cal-comentario">Comentario (opcional)</label>
+               <textarea id="cal-comentario" class="form-control" rows="3" maxlength="1000" placeholder="¿Qué te pareció?"></textarea>`,
+        width: 460, showCloseButton: true, closeButtonHtml: '<i class="bi bi-x-lg"></i>',
+        showCancelButton: true, reverseButtons: true, buttonsStyling: false,
+        confirmButtonText: 'Enviar calificación', cancelButtonText: 'Cancelar', customClass: swalSP,
+        didOpen: (popup) => {
+          const estrellas = popup.querySelectorAll('[data-n]');
+          const pintar = (hasta) => estrellas.forEach((e) => {
+            e.querySelector('i').className = Number(e.dataset.n) <= hasta ? 'bi bi-star-fill' : 'bi bi-star';
+          });
+          estrellas.forEach((e) => {
+            e.addEventListener('mouseenter', () => pintar(Number(e.dataset.n)));
+            e.addEventListener('mouseleave', () => pintar(nota));
+            e.addEventListener('click', () => {
+              nota = Number(e.dataset.n);
+              pintar(nota);
+              estrellas.forEach((x) => x.setAttribute('aria-checked', Number(x.dataset.n) === nota));
+              popup.querySelector('[data-nota-texto]').textContent = `${nota} de 5 · Selecciona una estrella para cambiarla`;
+            });
+          });
+        },
+        preConfirm: async () => {
+          if (!nota) { Swal.showValidationMessage('Selecciona de 1 a 5 estrellas'); return false; }
+          const datos = new FormData();
+          datos.append('csrfmiddlewaretoken', csrf ? csrf.value : '');
+          datos.append('producto', btn.dataset.producto);
+          datos.append('calificacion', nota);
+          datos.append('comentario', document.getElementById('cal-comentario').value);
+          try {
+            const r = await fetch(urlEl.dataset.calificarUrl, { method: 'POST', body: datos, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const json = await r.json();
+            if (!json.ok) throw new Error(json.mensaje);
+            return json;
+          } catch (err) {
+            Swal.showValidationMessage(err.message || 'No se pudo enviar tu calificación');
+            return false;
+          }
+        },
+      }).then((r) => {
+        if (!r.isConfirmed) return;
+        Swal.fire({ icon: 'success', title: r.value.mensaje, text: `Tu opinión de ${r.value.producto} ya es visible en la tienda.`, confirmButtonText: 'Listo' })
+          .then(() => window.location.reload());
+      });
+    });
+  });
+})();
+</script>
+{% endblock %}

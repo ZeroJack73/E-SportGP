@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{% block titulo_panel %}Panel{% endblock %} · Administración{% endblock %}
+{% block body_class %}panel-body{% endblock %}
+{% block extra_css %}<link href="{% static 'css/panel.css' %}" rel="stylesheet">{% endblock %}
+
+{% block body %}
+<div class="panel">
+  <aside class="panel__lateral">
+    <div class="panel__marca"><a class="sp-logo" href="{% url 'panel:inicio' %}">SportPG</a></div>
+    <div class="panel__seccion">Administración</div>
+    <nav class="panel__nav">
+      <a href="{% url 'panel:productos' %}" class="{% if seccion == 'productos' %}activa{% endif %}"><i class="bi bi-box-seam"></i>Productos</a>
+      <a href="{% url 'panel:categorias' %}" class="{% if seccion == 'categorias' %}activa{% endif %}"><i class="bi bi-diagram-3"></i>Categorías</a>
+      <a href="{% url 'panel:inventario' %}" class="{% if seccion == 'inventario' %}activa{% endif %}"><i class="bi bi-boxes"></i>Inventario</a>
+      <a href="{% url 'panel:pedidos' %}" class="{% if seccion == 'pedidos' %}activa{% endif %}"><i class="bi bi-receipt"></i>Pedidos</a>
+      <a href="{% url 'panel:reportes' %}" class="{% if seccion == 'reportes' %}activa{% endif %}"><i class="bi bi-bar-chart-line"></i>Reportes</a>
+    </nav>
+    <div class="panel__separador"></div>
+    <a class="panel__tienda" href="{% url 'tienda:inicio' %}" target="_blank" rel="noopener">Ver tienda<i class="bi bi-box-arrow-up-right ms-2"></i></a>
+    <div class="panel__pie">SportPG &middot; Panel interno<br><i class="bi bi-c-circle me-1"></i>{% now "Y" %}</div>
+  </aside>
+
+  <div class="panel__main">
+    <header class="panel__top">
+      <span>Tienda / Administración{% block migas %}{% endblock %}</span>
+      <div class="panel__top-usuario">
+        <span><i class="bi bi-person-badge me-1"></i>{{ user.get_full_name|default:"Administrador" }}</span>
+        <span class="text-secondary">&middot;</span>
+        <form method="post" action="{% url 'cuentas:logout' %}" data-confirm="Se cerrará la sesión de administración." data-confirm-title="Cerrar sesión" data-confirm-icon="question" data-confirm-ok="Sí, salir" data-confirm-color="#1f5bd8">
+          {% csrf_token %}
+          <button type="submit">Cerrar sesión</button>
+        </form>
+      </div>
+    </header>
+    <main class="panel__contenido">
+      {% block panel %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}

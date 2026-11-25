@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Pedido confirmado{% endblock %}
+
+{% block content %}
+<div class="container-xl">
+  <nav class="sp-breadcrumb" aria-label="breadcrumb">
+    <a href="{% url 'tienda:inicio' %}">Inicio</a> &nbsp;/&nbsp; <span>Confirmación</span>
+  </nav>
+  <h1 class="sp-h1">Finaliza tu pedido</h1>
+  <p class="sp-sub mb-4">Tu pago fue procesado correctamente.</p>
+
+  {% include 'pedidos/_pasos.html' %}
+
+  <h2 class="small fw-semibold mb-3">3. Confirmación &middot; Estado posterior al pago aprobado</h2>
+  <div class="confirmacion">
+    <span class="estado estado--info mb-3"><i class="bi bi-check2 me-1"></i>Pago aprobado</span>
+    <h3 class="fs-4 fw-bold mb-2">¡Gracias, {{ pedido.usuario.first_name|default:"cliente" }}! Tu pedido está confirmado.</h3>
+    <div class="confirmacion__codigo mb-2">Número único: {{ pedido.codigo }}</div>
+    <p class="sp-meta mb-1">
+      Total pagado: {{ pedido.total|moneda }} &middot;
+      {% if pedido.es_domicilio %}Envío a {{ pedido.direccion_alias }} &middot; Entrega estimada: {{ pedido.entrega_desde|date:"j b." }}–{{ pedido.entrega_hasta|date:"j b. Y" }}
+      {% else %}Retiro en {{ pedido.sucursal.nombre }} &middot; Disponible: {{ pedido.entrega_desde|date:"j b." }}–{{ pedido.entrega_hasta|date:"j b. Y" }}{% endif %}
+    </p>
+    <p class="sp-meta mb-4">Enviamos el comprobante a {{ pedido.email }}</p>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'pedidos:lista' %}?pedido={{ pedido.codigo }}" class="btn btn-primary px-4">Ver mi pedido</a>
+      <a href="{% url 'tienda:inicio' %}" class="btn btn-outline-secondary bg-white px-4">Seguir comprando</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

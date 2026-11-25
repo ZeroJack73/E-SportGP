@@ -1,0 +1,15 @@
+<div class="mb-3">
+  <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+  {% if es_password %}
+    <div class="campo-password">
+      {{ field }}
+      <button type="button" class="btn-ver" data-ver-password aria-label="Mostrar contraseña" title="Mostrar contraseña"><i class="bi bi-eye"></i></button>
+    </div>
+  {% else %}
+    {{ field }}
+  {% endif %}
+  {% for error in field.errors %}
+    <div class="invalid-feedback d-block"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+  {% endfor %}
+  {% if field.help_text and mostrar_ayuda %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
+</div>

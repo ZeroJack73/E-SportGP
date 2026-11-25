@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="auth">
+  <aside class="auth__lado">
+    <div class="auth__lado-inner">
+      <a class="sp-logo sp-logo--claro" href="{% url 'tienda:inicio' %}">SportPG</a>
+
+      <h2 class="auth__titular">{% block titular %}Tu esfuerzo.<br>Tu equipo.<br>Tu poder.{% endblock %}</h2>
+      <p class="auth__texto">{% block texto_lado %}Todo lo que necesitas para entrenar, competir y llegar más lejos.{% endblock %}</p>
+
+      <div class="auth__lineas" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+
+      <div class="auth__deportes">FÚTBOL &nbsp;/&nbsp; RUNNING &nbsp;/&nbsp; CICLISMO &nbsp;/&nbsp; FITNESS</div>
+      <div class="auth__lema">EQUÍPATE PARA MÁS.</div>
+    </div>
+  </aside>
+
+  <section class="auth__contenido">
+    <div class="auth__form">
+      <div class="auth__paso">{% block paso %}{% endblock %}</div>
+      <h1 class="auth__h1">{% block h1 %}{% endblock %}</h1>
+      <p class="auth__sub">{% block sub %}{% endblock %}</p>
+      {% block form %}{% endblock %}
+    </div>
+
+    <footer class="auth__pie">
+      <i class="bi bi-c-circle me-1"></i>{% now "Y" %} SportPG &nbsp;&middot;&nbsp; <a href="#">Privacidad</a> &nbsp;&middot;&nbsp; <a href="#">Términos</a>
+    </footer>
+  </section>
+</div>
+{% endblock %}

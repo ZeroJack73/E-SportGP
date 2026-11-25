@@ -1,0 +1,161 @@
+{% extends 'panel/base.html' %}
+{% load ui %}
+{% block titulo_panel %}{% if producto %}Editar producto{% else %}Nuevo producto{% endif %}{% endblock %}
+{% block migas %} / Productos{% endblock %}
+
+{% block panel %}
+<a href="{% url 'panel:productos' %}" class="pd-volver mb-3"><i class="bi bi-arrow-left me-2"></i>Volver a productos</a>
+
+<form method="post" enctype="multipart/form-data" class="p-card" style="max-width: 860px;" novalidate>
+  {% csrf_token %}
+  {% if errores %}{{ errores|json_script:"form-errores" }}{% endif %}
+  {{ formset.management_form }}
+
+  <div class="p-card__cab">
+    <h1 class="p-card__titulo">{% if producto %}Editar producto{% else %}Nuevo producto{% endif %}</h1>
+    <a href="{% url 'panel:productos' %}" class="btn btn-sm btn-link text-secondary" aria-label="Cerrar" data-cancelar><i class="bi bi-x-lg"></i></a>
+  </div>
+
+  <div class="p-card__cuerpo pt-0">
+    <div class="row g-3">
+      <div class="col-12">{% campo_simple form.nombre ayuda=False %}</div>
+      <div class="col-md-5">{% campo_simple form.deporte_categoria ayuda=False %}</div>
+      <div class="col-md-4">{% campo_simple form.marca ayuda=False %}</div>
+      <div class="col-md-3">{% campo_simple form.precio ayuda=False %}</div>
+      <div class="col-md-7">{% campo_simple form.descripcion ayuda=False %}</div>
+      <div class="col-md-5">{% campo_simple form.material ayuda=False %}</div>
+    </div>
+
+    <!-- Imagenes -->
+    <span class="form-label d-block mt-2">Imágenes</span>
+    <div class="d-flex flex-wrap align-items-start gap-3 mb-1">
+      {% with img=producto.imagen %}
+      <label class="p-slot" for="{{ form.imagen.id_for_label }}" data-slot>
+        {% if img %}<img src="{{ img.url }}" alt="">{% endif %}
+        <i class="bi bi-image"></i><span class="p-slot__etiqueta">Principal</span>
+      </label>
+      {% endwith %}
+      <label class="p-slot" for="{{ form.imagen_frontal.id_for_label }}" data-slot>
+        {% if extra_frontal %}<img src="{{ extra_frontal.imagen.url }}" alt="">{% endif %}
+        <i class="bi bi-image"></i><span class="p-slot__etiqueta">Frontal</span>
+      </label>
+      <label class="p-slot" for="{{ form.imagen_detalle.id_for_label }}" data-slot>
+        {% if extra_detalle %}<img src="{{ extra_detalle.imagen.url }}" alt="">{% endif %}
+        <i class="bi bi-image"></i><span class="p-slot__etiqueta">Detalle</span>
+      </label>
+      {{ form.imagen }}{{ form.imagen_frontal }}{{ form.imagen_detalle }}
+      <div class="ms-md-3">
+        <button type="button" class="btn btn-outline-secondary px-4" data-subir><i class="bi bi-upload me-2"></i>Subir imágenes</button>
+        <div class="form-text">JPG o PNG &middot; Máx. {{ max_imagen_mb }} MB por imagen. Haz clic en un recuadro para reemplazarlo.</div>
+        {% if extra_frontal or extra_detalle %}
+        <div class="d-flex gap-3 mt-2 small">
+          {% if extra_frontal %}<label class="form-check-label"><input type="checkbox" class="form-check-input me-1" name="quitar_frontal">Quitar frontal</label>{% endif %}
+          {% if extra_detalle %}<label class="form-check-label"><input type="checkbox" class="form-check-input me-1" name="quitar_detalle">Quitar detalle</label>{% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Variantes -->
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+      <span class="fw-bold">Variantes</span>
+      <button type="button" class="link-mini" data-agregar-variante><i class="bi bi-plus-lg me-1"></i>Agregar variante</button>
+    </div>
+    <div class="border rounded-1 p-variantes">
+      <table class="p-tabla">
+        <thead><tr><th>Talla</th><th>Color</th><th>SKU</th><th style="width: 90px;">Mínimo</th><th>Stock</th><th>Acción</th></tr></thead>
+        <tbody data-variantes>
+          {% for vf in formset %}
+          <tr class="{% if vf.DELETE.value %}eliminada{% endif %}">
+            <td>{% for h in vf.hidden_fields %}{{ h }}{% endfor %}{{ vf.talla }}</td>
+            <td>{{ vf.color }}</td>
+            <td>{{ vf.sku }}</td>
+            <td>{{ vf.stock_minimo }}</td>
+            <td class="text-secondary">{{ vf.instance.stock|default:"0" }}</td>
+            <td><span class="d-none">{{ vf.DELETE }}</span><button type="button" class="accion" data-eliminar-variante data-stock="{{ vf.instance.stock|default:0 }}">Eliminar</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <template data-plantilla>
+        {% with vf=formset.empty_form %}
+        <tr>
+          <td>{% for h in vf.hidden_fields %}{{ h }}{% endfor %}{{ vf.talla }}</td>
+          <td>{{ vf.color }}</td>
+          <td>{{ vf.sku }}</td>
+          <td>{{ vf.stock_minimo }}</td>
+          <td class="text-secondary">0</td>
+          <td><span class="d-none">{{ vf.DELETE }}</span><button type="button" class="accion" data-eliminar-variante data-stock="0">Eliminar</button></td>
+        </tr>
+        {% endwith %}
+      </template>
+    </div>
+    <div class="form-text">El stock se ajusta desde <a href="{% url 'panel:inventario' %}">Inventario</a> con movimientos registrados. Las variantes nuevas inician en 0.</div>
+
+    <div class="d-flex flex-wrap gap-4 mt-3">
+      <div class="form-check">{{ form.disponible }}<label class="form-check-label small" for="{{ form.disponible.id_for_label }}">Producto activo</label></div>
+      <div class="form-check">{{ form.es_nuevo }}<label class="form-check-label small" for="{{ form.es_nuevo.id_for_label }}">Marcar como nuevo</label></div>
+      <div class="form-check">{{ form.destacado }}<label class="form-check-label small" for="{{ form.destacado.id_for_label }}">Destacado</label></div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <a href="{% url 'panel:productos' %}" class="btn btn-outline-secondary px-4" data-cancelar>Cancelar</a>
+      <button type="submit" class="btn btn-primary px-4" data-loading="Guardando">Guardar producto</button>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  // Vista previa al elegir imagen + boton "Subir imagenes" (llena el primer recuadro libre)
+  const slots = [...document.querySelectorAll('[data-slot]')];
+  slots.forEach((slot) => {
+    const input = document.getElementById(slot.htmlFor);
+    input.addEventListener('change', () => {
+      const f = input.files[0];
+      if (!f) return;
+      if (f.size > {{ max_imagen_mb }} * 1024 * 1024 || !['image/jpeg', 'image/png'].includes(f.type)) {
+        Swal.fire({ icon: 'error', title: 'Imagen no válida', text: 'Usa JPG o PNG de máximo {{ max_imagen_mb }} MB.', confirmButtonText: 'Entendido' });
+        input.value = '';
+        return;
+      }
+      let img = slot.querySelector('img');
+      if (!img) { img = document.createElement('img'); slot.prepend(img); }
+      img.src = URL.createObjectURL(f);
+    });
+  });
+  document.querySelector('[data-subir]').addEventListener('click', () => {
+    const libre = slots.find((s) => !s.querySelector('img')) || slots[0];
+    document.getElementById(libre.htmlFor).click();
+  });
+
+  // Variantes: agregar / eliminar filas del formset
+  const cuerpo = document.querySelector('[data-variantes]');
+  const total = document.getElementById('id_var-TOTAL_FORMS');
+  const plantilla = document.querySelector('[data-plantilla]');
+  document.querySelector('[data-agregar-variante]').addEventListener('click', () => {
+    const i = Number(total.value);
+    const html = plantilla.innerHTML.replace(/__prefix__/g, i);
+    cuerpo.insertAdjacentHTML('beforeend', html);
+    total.value = i + 1;
+  });
+  // Producto nuevo: arranca con una fila lista para completar
+  if (!cuerpo.querySelector('tr')) document.querySelector('[data-agregar-variante]').click();
+
+  cuerpo.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-eliminar-variante]');
+    if (!btn) return;
+    const fila = btn.closest('tr');
+    if (Number(btn.dataset.stock) > 0) {
+      Swal.fire({ icon: 'warning', title: 'La variante tiene stock',
+                  text: `Tiene ${btn.dataset.stock} unidades. Registra una salida en Inventario antes de eliminarla.`, confirmButtonText: 'Entendido' });
+      return;
+    }
+    fila.querySelector('input[name$="-DELETE"]').checked = true;
+    fila.classList.add('eliminada');
+  });
+})();
+</script>
+{% endblock %}

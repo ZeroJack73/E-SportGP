@@ -1,0 +1,39 @@
+{% extends 'cuentas/base_auth.html' %}
+{% load ui %}
+{% block title %}Crear cuenta{% endblock %}
+
+{% block titular %}El siguiente<br>nivel empieza<br>contigo.{% endblock %}
+{% block texto_lado %}Crea tu cuenta y encuentra el equipo para superar tu próxima meta.{% endblock %}
+
+{% block paso %}02 / Nueva cuenta{% endblock %}
+{% block h1 %}Empieza a darlo todo{% endblock %}
+{% block sub %}Regístrate como cliente de SportPG.{% endblock %}
+
+{% block form %}
+<form method="post" class="needs-validation" novalidate>
+  {% csrf_token %}
+  {% include 'includes/form_errores.html' %}
+
+  <div class="row g-3">
+    <div class="col-sm-6">{% campo_simple form.first_name %}</div>
+    <div class="col-sm-6">{% campo_simple form.last_name %}</div>
+  </div>
+  {% campo_simple form.email %}
+  {% campo_simple form.telefono %}
+  {% campo_simple form.password password=True %}
+
+  <div class="form-check my-4" style="font-size: .74rem;">
+    <input class="form-check-input {% if form.terminos.errors %}is-invalid{% endif %}" type="checkbox" name="terminos" id="id_terminos" required {% if form.terminos.value %}checked{% endif %}>
+    <label class="form-check-label text-secondary" for="id_terminos">{{ form.terminos.label }}</label>
+    {% for error in form.terminos.errors %}<div class="invalid-feedback d-block"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>{% endfor %}
+  </div>
+
+  <button type="submit" class="btn btn-primary w-100 mb-2" data-loading="Creando cuenta">Crear cuenta</button>
+  <a href="{% url 'tienda:inicio' %}" class="btn btn-outline-secondary w-100" data-cancelar>Cancelar</a>
+</form>
+
+<p class="text-center mt-4 mb-0" style="font-size: .78rem;">
+  <span class="text-secondary">¿Ya tienes una cuenta?</span>
+  <a class="fw-semibold ms-1" href="{% url 'cuentas:login' %}">Inicia sesión</a>
+</p>
+{% endblock %}

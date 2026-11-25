@@ -1,0 +1,186 @@
+{% extends 'panel/base.html' %}
+{% load ui %}
+{% block titulo_panel %}Pedidos{% endblock %}
+
+{% block panel %}
+<h1 class="panel__h1">Gestión de pedidos</h1>
+<p class="panel__sub">Consulta compras, actualiza su estado y registra despachos.</p>
+
+<div class="p-card mb-3">
+  <form method="get" class="p-card__cuerpo p-filtros" style="grid-template-columns: 1fr 1fr 1fr 1fr auto;">
+    <div><label class="form-label" for="{{ filtros.estado.id_for_label }}">Estado</label>{{ filtros.estado }}</div>
+    <div><label class="form-label" for="{{ filtros.desde.id_for_label }}">Desde</label>{{ filtros.desde }}</div>
+    <div><label class="form-label" for="{{ filtros.hasta.id_for_label }}">Hasta</label>{{ filtros.hasta }}</div>
+    <div><label class="form-label" for="{{ filtros.entrega.id_for_label }}">Entrega</label>{{ filtros.entrega }}</div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary px-4">Aplicar filtros</button>
+      {% if request.GET %}<a href="{% url 'panel:pedidos' %}" class="btn btn-outline-secondary bg-white" title="Limpiar filtros"><i class="bi bi-x-lg"></i></a>{% endif %}
+    </div>
+  </form>
+</div>
+
+<div class="p-card">
+  <div class="table-responsive">
+    <table class="p-tabla">
+      <thead><tr><th>Número</th><th>Cliente</th><th>Fecha</th><th>Importe</th><th>Estado</th><th>Entrega</th><th>Acción</th></tr></thead>
+      <tbody>
+        {% for p in pedidos %}
+        <tr class="{% if sel and p.pk == sel.pk %}seleccionado{% endif %}">
+          <td class="fw-bold">{{ p.codigo }}</td>
+          <td>{{ p.usuario.get_full_name|default:p.email }}</td>
+          <td>{{ p.creado|date:"j b. Y" }}</td>
+          <td>${{ p.total|stringformat:".2f" }}</td>
+          <td><span class="estado {{ p.clase_estado }}">{{ p.get_estado_display }}</span></td>
+          <td>{% if p.es_domicilio %}Domicilio{% else %}Sucursal{% endif %}</td>
+          <td><a class="accion" href="{% querystring pedido=p.codigo %}#detalle">Ver detalle</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center text-secondary py-5">No hay pedidos con esos filtros.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include 'panel/_paginacion.html' with pagina=pedidos etiqueta="pedidos" nota="Importes en USD" %}
+
+{% if sel %}
+<h2 class="panel__subtitulo" id="detalle">Detalle del pedido seleccionado</h2>
+<div class="p-card p-detalle-grid">
+  <div class="p-card__cuerpo">
+    <h3 class="fs-5 fw-bold mb-1">{{ sel.codigo }}</h3>
+    <p class="sp-meta mb-3">{{ sel.usuario.get_full_name|default:"Cliente" }} &middot; {{ sel.email }}{% if sel.telefono %} &middot; {{ sel.telefono }}{% elif sel.usuario.perfil.telefono %} &middot; {{ sel.usuario.perfil.telefono }}{% endif %}</p>
+
+    {% for item in sel.items.all %}
+      <div class="d-flex justify-content-between small mb-1 gap-3" style="max-width: 520px;">
+        <span class="fw-semibold">{{ item.producto.nombre }}{% if item.variante.descripcion_corta %} &middot; {{ item.variante.descripcion_corta }}{% elif item.detalle_variante %} &middot; {{ item.detalle_variante }}{% endif %}</span>
+        <span class="text-nowrap">{{ item.cantidad }} &times; ${{ item.precio|stringformat:".2f" }}</span>
+      </div>
+    {% endfor %}
+
+    <div class="small fw-semibold mt-3">
+      {% if sel.es_domicilio %}Entrega a domicilio &middot; {{ sel.direccion_alias }}{% else %}Retiro en sucursal &middot; {{ sel.sucursal.nombre }}{% endif %}
+    </div>
+    <div class="sp-mono mt-1">{% if sel.es_domicilio %}{{ sel.recibe }}<br>{{ sel.direccion_texto|linebreaksbr }}{% else %}{{ sel.sucursal.direccion }}{% endif %}</div>
+    {% if sel.numero_guia %}<div class="small mt-2"><i class="bi bi-truck me-1"></i>Guía {{ sel.numero_guia }} &middot; {{ sel.bultos }} bulto{{ sel.bultos|pluralize }} &middot; {{ sel.peso_kg }} kg</div>{% endif %}
+
+    <div class="fs-5 fw-bold mt-3">Total{% if sel.pagado_en %} pagado{% endif %}: {{ sel.total|moneda }}</div>
+    <div class="sp-meta">{% if sel.pagado_en %}Pago aprobado{% elif sel.estado == 'cancelado' %}Cancelado{% else %}Pago pendiente{% endif %} &middot; {% if sel.envio %}Envío {{ sel.envio|moneda }}{% elif sel.es_domicilio %}Envío gratis{% else %}Retiro sin costo{% endif %}</div>
+
+    {% if sel.eventos.all %}
+      <div class="small fw-semibold mt-4 mb-1">Historial</div>
+      <ul class="p-eventos">
+        {% for e in sel.eventos.all %}
+          <li><b>{{ e.get_estado_display }}</b> &middot; {{ e.creado|date:"j b. Y, H:i" }} &middot; {{ e.usuario|responsable }}{% if e.nota %} &middot; {{ e.nota }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+
+  <div class="p-card__cuerpo">
+    <form method="post" action="{% url 'panel:pedido_estado' sel.codigo %}" data-cambiar-estado>
+      {% csrf_token %}
+      <input type="hidden" name="volver" value="{{ request.get_full_path }}">
+      <label class="form-label small" for="estado-sel">Estado actual</label>
+      <select id="estado-sel" name="estado" class="form-select mb-2" {% if sel.estados_permitidos|length < 2 %}disabled{% endif %}>
+        {% for valor, etiqueta in sel.estados_permitidos %}<option value="{{ valor }}" {% if valor == sel.estado %}selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+      </select>
+      {% if sel.siguiente_estado_display %}
+        <div class="small mb-3">Siguiente paso: <b>{{ sel.siguiente_estado_display }}</b></div>
+      {% elif sel.estado == 'pendiente_pago' %}
+        <div class="small mb-3 text-secondary">Esperando el pago del cliente.</div>
+      {% else %}
+        <div class="small mb-3 text-secondary">Este pedido ya no tiene pasos pendientes.</div>
+      {% endif %}
+      {% if sel.requiere_despacho %}
+        <a href="#despacho" class="btn btn-primary w-100 mb-2"><i class="bi bi-truck me-2"></i>Registrar despacho</a>
+      {% endif %}
+      {% if sel.estados_permitidos|length > 1 %}
+        <button type="submit" class="btn {% if sel.requiere_despacho %}btn-outline-secondary{% else %}btn-primary{% endif %} w-100">Actualizar estado</button>
+      {% endif %}
+    </form>
+    <div class="sp-meta mt-3">Última actualización<br>{{ sel.actualizado|date:"j b. Y · H:i" }}<br>{{ sel.actualizado_por|responsable }}</div>
+  </div>
+</div>
+
+<div class="p-flujo mt-3">
+  <div class="p-flujo__titulo">Flujo de preparación y entrega</div>
+  Pagado <i class="bi bi-arrow-right mx-1"></i> En preparación <i class="bi bi-arrow-right mx-1"></i> Enviado (domicilio) / Listo para retirar (sucursal) <i class="bi bi-arrow-right mx-1"></i> Entregado
+</div>
+
+{% if sel.requiere_despacho %}
+<h2 class="panel__subtitulo" id="despacho">Registrar despacho desde En preparación</h2>
+<div class="row g-4">
+  <div class="col-lg-7">
+    <form method="post" action="{% url 'panel:pedido_despacho' sel.codigo %}" class="p-card" data-despacho novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="volver" value="{{ request.get_full_path }}">
+      <div class="p-card__cab"><h3 class="p-card__titulo">Registrar despacho</h3></div>
+      <div class="p-card__cuerpo pt-0">
+        <div class="row">
+          <div class="col-sm-6">{% campo_simple despacho_form.peso_kg ayuda=False %}</div>
+          <div class="col-sm-6">{% campo_simple despacho_form.bultos ayuda=False %}</div>
+        </div>
+        {% campo_simple despacho_form.numero_guia ayuda=False %}
+        <div class="d-flex justify-content-end gap-2">
+          <a href="#detalle" class="btn btn-outline-secondary px-4">Cancelar</a>
+          <button type="submit" class="btn btn-primary px-4">Confirmar despacho</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="col-lg-5">
+    <div class="p-card p-card__cuerpo">
+      <h3 class="fs-6 fw-bold">{{ sel.codigo }}</h3>
+      <p class="small fw-semibold mb-2">Solo para envío a domicilio.</p>
+      <p class="sp-meta mb-0">Al confirmar, pasa a <b>Enviado</b>.<br>Guarda peso, bultos y número de guía, y avisa al cliente por correo.<br><br>
+        Retiro en sucursal: cambia a <b>Listo para retirar</b>, sin registrar despacho.</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const form = document.querySelector('[data-cambiar-estado]');
+  if (form) {
+    form.addEventListener('submit', (ev) => {
+      if (form.dataset.ok) return;
+      ev.preventDefault();
+      const sel = form.querySelector('select');
+      const etiqueta = sel.options[sel.selectedIndex].text;
+      const cancelar = sel.value === 'cancelado';
+      Swal.fire({
+        icon: cancelar ? 'warning' : 'question',
+        title: cancelar ? '¿Cancelar este pedido?' : 'Actualizar estado',
+        html: cancelar ? 'Se devolverá el stock de todos los artículos al inventario.<br>Si el cliente ya pagó, gestiona el reembolso.'
+                       : `El pedido pasará a <b>${etiqueta}</b> y se notificará al cliente por correo.`,
+        showCancelButton: true, reverseButtons: true,
+        confirmButtonText: cancelar ? 'Sí, cancelar pedido' : 'Sí, actualizar', cancelButtonText: 'Volver',
+        confirmButtonColor: cancelar ? '#dc3545' : '#1f5bd8',
+      }).then((r) => { if (r.isConfirmed) { form.dataset.ok = '1'; form.submit(); } });
+    });
+  }
+
+  const despacho = document.querySelector('[data-despacho]');
+  if (despacho) {
+    despacho.addEventListener('submit', (ev) => {
+      if (despacho.dataset.ok) return;
+      ev.preventDefault();
+      const v = (n) => despacho.querySelector(`[name="des-${n}"]`).value.trim();
+      if (!v('peso_kg') || !v('bultos') || !v('numero_guia')) {
+        Swal.fire({ icon: 'warning', title: 'Faltan datos del despacho', text: 'Completa peso, bultos y número de guía.', confirmButtonText: 'Entendido' });
+        return;
+      }
+      Swal.fire({
+        icon: 'question', title: 'Confirmar despacho',
+        html: `Guía <b>${v('numero_guia')}</b> &middot; ${v('bultos')} bulto(s) &middot; ${v('peso_kg')} kg<br>El pedido pasará a <b>Enviado</b>.`,
+        showCancelButton: true, reverseButtons: true, confirmButtonText: 'Sí, despachar', cancelButtonText: 'Revisar',
+      }).then((r) => { if (r.isConfirmed) { despacho.dataset.ok = '1'; despacho.submit(); } });
+    });
+  }
+})();
+</script>
+{% endblock %}

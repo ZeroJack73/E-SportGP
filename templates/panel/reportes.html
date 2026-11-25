@@ -1,0 +1,64 @@
+{% extends 'panel/base.html' %}
+{% load ui %}
+{% block titulo_panel %}Reportes{% endblock %}
+
+{% block panel %}
+<h1 class="panel__h1">Reportes de ventas</h1>
+<p class="panel__sub">Analiza las ventas confirmadas de tu tienda.</p>
+
+<div class="p-card mb-4">
+  <form method="get" class="p-card__cuerpo">
+    <div class="p-filtros" style="grid-template-columns: 1fr 1fr 1.2fr 1.2fr;">
+      <div><label class="form-label" for="{{ filtros.desde.id_for_label }}">Desde</label>{{ filtros.desde }}</div>
+      <div><label class="form-label" for="{{ filtros.hasta.id_for_label }}">Hasta</label>{{ filtros.hasta }}</div>
+      <div><label class="form-label" for="{{ filtros.categoria.id_for_label }}">Categoría</label>{{ filtros.categoria }}</div>
+      <div><label class="form-label" for="{{ filtros.entrega.id_for_label }}">Entrega</label>{{ filtros.entrega }}</div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <span class="sp-meta">Período: {{ d.desde|date:"j \d\e F \d\e Y" }} – {{ d.hasta|date:"j \d\e F \d\e Y" }}</span>
+      <button type="submit" class="btn btn-primary px-4">Aplicar filtros</button>
+    </div>
+  </form>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4"><div class="p-kpi">
+    <div class="p-kpi__label">Pedidos</div><div class="p-kpi__valor">{{ d.pedidos }}</div>
+    <div class="p-kpi__nota">Compras con pago confirmado</div></div></div>
+  <div class="col-md-4"><div class="p-kpi">
+    <div class="p-kpi__label">Unidades vendidas</div><div class="p-kpi__valor">{{ d.unidades }}</div>
+    <div class="p-kpi__nota">Productos vendidos en el período</div></div></div>
+  <div class="col-md-4"><div class="p-kpi">
+    <div class="p-kpi__label">Total de ventas</div><div class="p-kpi__valor p-kpi__valor--azul">{{ d.total|moneda }}</div>
+    <div class="p-kpi__nota">IVA incluido &middot; Envío excluido</div></div></div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="fs-5 fw-bold mb-0">Desglose por categoría</h2>
+  <a href="{% querystring exportar='csv' %}" class="btn btn-outline-secondary bg-white px-4 {% if not d.filas %}disabled{% endif %}"><i class="bi bi-download me-2"></i>Exportar CSV</a>
+</div>
+<div class="p-card">
+  <div class="table-responsive">
+    <table class="p-tabla">
+      <thead><tr><th>Categoría</th><th>Pedidos</th><th>Unidades</th><th>Domicilio</th><th>Retiro</th><th class="text-end">Total (USD)</th></tr></thead>
+      <tbody>
+        {% for f in d.filas %}
+        <tr><td class="fw-semibold">{{ f.categoria }}</td><td>{{ f.pedidos }}</td><td>{{ f.unidades }}</td><td>{{ f.domicilio }}</td><td>{{ f.retiro }}</td><td class="text-end">${{ f.total|stringformat:".2f" }}</td></tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-secondary py-5"><i class="bi bi-bar-chart me-2"></i>No hay ventas confirmadas en este período.</td></tr>
+        {% endfor %}
+      </tbody>
+      {% if d.filas %}
+      <tfoot><tr><td>Total</td><td>{{ d.totales.pedidos }}</td><td>{{ d.totales.unidades }}</td><td>{{ d.totales.domicilio }}</td><td>{{ d.totales.retiro }}</td><td class="text-end">${{ d.totales.total|stringformat:".2f" }}</td></tr></tfoot>
+      {% endif %}
+    </table>
+  </div>
+</div>
+<p class="sp-meta mt-2">Pedidos por categoría principal &middot; Cada pedido se cuenta una sola vez (en la categoría con mayor importe).</p>
+
+<div class="p-flujo mt-4">
+  <div class="fw-semibold mb-1" style="font-size: .8rem;">Cómo se calculan estos resultados</div>
+  Incluye pedidos Pagado, En preparación, Enviado, Listo para retirar y Entregado, según la fecha de pago.
+  Excluye cancelaciones y pagos pendientes. Valores con IVA, sin envío. Actualizado el {{ ahora|date:"j b. Y" }} a las {{ ahora|date:"H:i" }}.
+</div>
+{% endblock %}

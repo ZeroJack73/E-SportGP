@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Mi perfil{% endblock %}
+
+{% block content %}
+<div class="container-xl">
+  <nav class="sp-breadcrumb" aria-label="breadcrumb">
+    <a href="{% url 'tienda:inicio' %}">Inicio</a> &nbsp;/&nbsp;
+    <span>Mi cuenta</span> &nbsp;/&nbsp; <span>Mi perfil</span>
+  </nav>
+  <h1 class="sp-h1">Mi perfil</h1>
+  <p class="sp-sub mb-4">Actualiza tus datos de contacto.</p>
+
+  {% include 'cuentas/_tabs.html' with tab='perfil' %}
+
+  <section class="sp-panel" style="max-width: 640px;">
+    <div class="sp-panel__cab"><h2 class="sp-panel__titulo">Datos personales</h2></div>
+    <form method="post" class="sp-panel__cuerpo needs-validation" novalidate
+          data-confirm="Se guardarán los cambios en tu perfil." data-confirm-title="Guardar cambios"
+          data-confirm-icon="question" data-confirm-ok="Sí, guardar" data-confirm-color="#1f5bd8">
+      {% csrf_token %}
+      {% include 'includes/form_errores.html' %}
+      <div class="row">
+        <div class="col-sm-6">{% campo_simple form.first_name %}</div>
+        <div class="col-sm-6">{% campo_simple form.last_name %}</div>
+      </div>
+      {% campo_simple form.email %}
+      {% campo_simple form.telefono %}
+      <button type="submit" class="btn btn-primary px-4 mt-2" data-loading="Guardando">Guardar cambios</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

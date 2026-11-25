@@ -1,0 +1,19 @@
+Hola {{ pedido.usuario.first_name|default:pedido.email }},
+
+Tu pago fue aprobado y tu pedido {{ pedido.codigo }} está confirmado.
+
+{% for item in pedido.items.all %}- {{ item.producto.nombre }}{% if item.detalle_variante %} ({{ item.detalle_variante }}){% endif %}: {{ item.cantidad }} x ${{ item.precio }}
+{% endfor %}
+Subtotal: ${{ pedido.subtotal }}
+Envío: {% if pedido.envio %}${{ pedido.envio }}{% else %}Gratis{% endif %}
+Total pagado: ${{ pedido.total }} USD
+Referencia de pago: {{ pedido.referencia_pago }}
+
+{% if pedido.es_domicilio %}Entrega en {{ pedido.direccion_alias }}:
+{{ pedido.direccion_texto }}
+Entrega estimada: {{ pedido.entrega_desde|date:"j b." }} - {{ pedido.entrega_hasta|date:"j b. Y" }}{% else %}Retiro en {{ pedido.sucursal.nombre }} ({{ pedido.sucursal.direccion }}).
+Te avisaremos por correo cuando esté listo para retirar.{% endif %}
+
+Consulta tu pedido: {{ url }}
+
+Equipo SportPG

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Tu carrito{% endblock %}
+
+{% block content %}
+<div class="container-xl">
+  <nav class="sp-breadcrumb" aria-label="breadcrumb">
+    <a href="{% url 'tienda:inicio' %}">Inicio</a> &nbsp;/&nbsp; <span>Carrito</span>
+  </nav>
+  <h1 class="sp-h1">Tu carrito</h1>
+
+  {% if items.paginator.count %}
+  <p class="sp-sub mb-4">{{ carrito.lineas }} producto{{ carrito.lineas|pluralize }} &middot; {{ carrito|length }} unidad{{ carrito|length|pluralize:"es" }}. Revisa tu equipo antes de continuar.</p>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="sp-panel">
+        <div class="table-responsive">
+          <table class="sp-tabla sp-tabla--simple">
+            <thead>
+              <tr><th style="width: 55%;">Producto</th><th>Cantidad</th><th class="text-end">Subtotal</th></tr>
+            </thead>
+            <tbody>
+              {% for item in items %}
+              {% with p=item.producto v=item.variante %}
+              <tr>
+                <td>
+                  <div class="carrito-producto">
+                    <a href="{{ p.get_absolute_url }}" class="carrito-producto__img">
+                      {% if p.imagen %}<img src="{{ p.imagen.url }}" alt="{{ p.nombre }}">
+                      {% else %}<i class="bi bi-image"></i><span>{{ p.deporte.nombre }}</span>{% endif %}
+                    </a>
+                    <div>
+                      <a href="{{ p.get_absolute_url }}" class="carrito-producto__nombre">{{ p.nombre }}</a>
+                      {% if v.descripcion %}<div class="sp-meta mt-1">{{ v.descripcion }}</div>{% endif %}
+                      <div class="small mt-2">{{ item.precio|moneda }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <form method="post" action="{% url 'carrito:agregar' v.id %}" data-stepper>
+                    {% csrf_token %}
+                    <input type="hidden" name="reemplazar" value="on">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <div class="cantidad-mini">
+                      <button type="button" data-paso="-1" aria-label="Restar" {% if item.cantidad <= 1 %}disabled{% endif %}><i class="bi bi-dash"></i></button>
+                      <input type="number" name="cantidad" value="{{ item.cantidad }}" min="1" max="{{ v.stock }}" aria-label="Cantidad">
+                      <button type="button" data-paso="1" aria-label="Sumar" {% if item.cantidad >= v.stock %}disabled{% endif %}><i class="bi bi-plus"></i></button>
+                    </div>
+                  </form>
+                  <form method="post" action="{% url 'carrito:eliminar' v.id %}" class="mt-2"
+                        data-confirm="Se quitará &quot;{{ p.nombre }}&quot;{% if v.descripcion %} ({{ v.descripcion }}){% endif %} de tu carrito."
+                        data-confirm-title="Eliminar producto" data-confirm-ok="Sí, eliminar">
+                    {% csrf_token %}
+                    <button type="submit" class="link-mini">Eliminar</button>
+                  </form>
+                </td>
+                <td class="text-end fw-bold text-nowrap">{{ item.subtotal|moneda }}</td>
+              </tr>
+              {% endwith %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% if items.has_other_pages %}
+        {% include 'includes/paginacion.html' with pagina=items etiqueta="productos" %}
+      {% endif %}
+
+      <div class="d-flex justify-content-between align-items-center mt-4">
+        <a href="{% url 'tienda:inicio' %}" class="btn btn-outline-secondary px-4"><i class="bi bi-arrow-left me-2"></i>Seguir comprando</a>
+        <form method="post" action="{% url 'carrito:vaciar' %}"
+              data-confirm="Se eliminarán todos los productos del carrito." data-confirm-title="Vaciar carrito" data-confirm-ok="Sí, vaciar">
+          {% csrf_token %}
+          <button class="link-mini link-mini--peligro"><i class="bi bi-cart-x me-1"></i>Vaciar carrito</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="resumen">
+        <h2 class="resumen__titulo">Resumen de compra</h2>
+        <div class="resumen__fila"><span>Subtotal ({{ carrito|length }} unidad{{ carrito|length|pluralize:"es" }})</span><span class="fw-semibold">{{ subtotal|moneda }}</span></div>
+        <div class="resumen__fila"><span>Envío</span><span class="fw-semibold">{% if envio %}{{ envio|moneda }}{% else %}Gratis{% endif %}</span></div>
+        {% if falta_envio_gratis %}
+          <div class="resumen__nota mb-2"><i class="bi bi-truck me-1"></i>Agrega {{ falta_envio_gratis|moneda }} más para obtener envío gratis.</div>
+        {% endif %}
+        <div class="resumen__total"><span>Total</span><span>{{ total|moneda }}</span></div>
+        <div class="resumen__nota mb-3">IVA incluido &middot; Sin cargos adicionales</div>
+        <a href="{% url 'pedidos:checkout' %}" class="btn btn-primary w-100">Realizar pedido</a>
+        <div class="resumen__nota mt-3"><i class="bi bi-shield-lock me-1"></i>Pago seguro en pasarela externa.</div>
+        {% if not user.is_authenticated %}<div class="resumen__nota mt-1"><i class="bi bi-person me-1"></i>Te pediremos iniciar sesión para continuar.</div>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="banner-meta mt-5">
+    <div class="banner-meta__titulo">Tu siguiente meta empieza aquí.</div>
+    <div class="sp-meta">Envío gratis desde ${{ envio_gratis_desde }}.00 USD &middot; Devoluciones dentro de 30 días</div>
+  </div>
+
+  {% else %}
+  <p class="sp-sub mb-4">Tu carrito está vacío.</p>
+  <div class="sp-panel text-center py-5">
+    <i class="bi bi-cart text-secondary" style="font-size: 3rem;"></i>
+    <h2 class="pd-h2 mt-3">Aún no agregas productos</h2>
+    <p class="sp-meta">Explora el catálogo y encuentra el equipo para tu próxima meta.</p>
+    <a href="{% url 'tienda:inicio' %}" class="btn btn-primary px-4">Ir al catálogo</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Cantidad con botones - / + : envia el formulario con la nueva cantidad
+  document.querySelectorAll('[data-stepper]').forEach((form) => {
+    const input = form.querySelector('input[name="cantidad"]');
+    const enviar = () => { form.querySelectorAll('button').forEach((b) => (b.disabled = true)); form.submit(); };
+    form.querySelectorAll('[data-paso]').forEach((b) => b.addEventListener('click', () => {
+      const nuevo = Number(input.value) + Number(b.dataset.paso);
+      if (nuevo < 1 || nuevo > Number(input.max)) return;
+      input.value = nuevo;
+      enviar();
+    }));
+    input.addEventListener('change', () => {
+      const v = Math.min(Math.max(1, parseInt(input.value, 10) || 1), Number(input.max));
+      input.value = v;
+      enviar();
+    });
+  });
+</script>
+{% endblock %}

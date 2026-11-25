@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Mis direcciones{% endblock %}
+
+{% block content %}
+<div class="container-xl">
+  <nav class="sp-breadcrumb" aria-label="breadcrumb">
+    <a href="{% url 'tienda:inicio' %}">Inicio</a> &nbsp;/&nbsp;
+    <a href="{% url 'cuentas:perfil' %}">Mi cuenta</a> &nbsp;/&nbsp; <span>Mis direcciones</span>
+  </nav>
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+      <h1 class="sp-h1">Mis direcciones</h1>
+      <p class="sp-sub mb-4">Administra las direcciones que usas para recibir tus pedidos.</p>
+    </div>
+    {% if not form %}
+      <a href="{% url 'cuentas:direccion_nueva' %}#formulario" class="btn btn-primary px-4"><i class="bi bi-plus-lg me-2"></i>Agregar dirección</a>
+    {% endif %}
+  </div>
+
+  {% include 'cuentas/_tabs.html' with tab='direcciones' %}
+
+  {% if direcciones %}
+  <div class="row row-cols-1 row-cols-md-2 g-4">
+    {% for d in direcciones %}
+    <div class="col">
+      <div class="sp-panel direccion-card {% if editando.pk == d.pk %}border-primary{% endif %}">
+        <div class="sp-panel__cuerpo">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h2 class="fs-6 fw-bold mb-0">{{ d.alias }}</h2>
+            {% if d.predeterminada %}<span class="estado estado--info">Predeterminada</span>{% endif %}
+          </div>
+          <div class="sp-mono">
+            {{ d.recibe }} &middot; {{ d.telefono }}<br>
+            {{ d.linea1 }}<br>
+            {{ d.linea2 }}
+          </div>
+        </div>
+        <div class="direccion-card__acciones">
+          <a href="{% url 'cuentas:direccion_editar' d.pk %}#formulario" class="link-mini">Editar</a>
+          <form method="post" action="{% url 'cuentas:direccion_eliminar' d.pk %}"
+                data-confirm="Se eliminará la dirección &quot;{{ d.alias }}&quot;.{% if d.predeterminada and direcciones|length > 1 %} Otra dirección pasará a ser la predeterminada.{% endif %}"
+                data-confirm-title="Eliminar dirección" data-confirm-ok="Sí, eliminar">
+            {% csrf_token %}
+            <button type="submit" class="link-mini">Eliminar</button>
+          </form>
+          {% if not d.predeterminada %}
+          <form method="post" action="{% url 'cuentas:direccion_predeterminar' d.pk %}" class="ms-auto">
+            {% csrf_token %}
+            <button type="submit" class="link-mini text-secondary">Usar como predeterminada</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% elif not form %}
+  <div class="sp-panel text-center py-5">
+    <i class="bi bi-geo-alt text-secondary" style="font-size: 3rem;"></i>
+    <h2 class="pd-h2 mt-3">Aún no tienes direcciones</h2>
+    <p class="sp-meta">Agrega una para recibir tus pedidos más rápido.</p>
+    <a href="{% url 'cuentas:direccion_nueva' %}#formulario" class="btn btn-primary px-4"><i class="bi bi-plus-lg me-2"></i>Agregar dirección</a>
+  </div>
+  {% endif %}
+
+  {% if form %}
+  <section class="sp-panel mt-5" id="formulario">
+    <div class="sp-panel__cab">
+      <h2 class="sp-panel__titulo">{% if editando %}Editar dirección{% else %}Agregar dirección{% endif %}</h2>
+      <a href="{% if next %}{{ next }}{% else %}{% url 'cuentas:direcciones' %}{% endif %}" class="btn btn-sm btn-link text-secondary" aria-label="Cerrar" data-cancelar><i class="bi bi-x-lg"></i></a>
+    </div>
+    <form method="post" class="sp-panel__cuerpo needs-validation" novalidate>
+      {% csrf_token %}
+      {% include 'includes/form_errores.html' %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      <div class="row g-x-4">
+        <div class="col-md-3">{% campo_simple form.alias ayuda=False %}</div>
+        <div class="col-md-5">{% campo_simple form.recibe ayuda=False %}</div>
+        <div class="col-md-4">{% campo_simple form.provincia ayuda=False %}</div>
+
+        <div class="col-md-5">{% campo_simple form.calle ayuda=False %}</div>
+        <div class="col-md-3">{% campo_simple form.apto ayuda=False %}</div>
+        <div class="col-md-4">{% campo_simple form.telefono ayuda=False %}</div>
+
+        <div class="col-md-3">{% campo_simple form.corregimiento ayuda=False %}</div>
+        <div class="col-md-3">{% campo_simple form.distrito ayuda=False %}</div>
+        <div class="col-md-2">{% campo_simple form.codigo_postal ayuda=False %}</div>
+        <div class="col-md-4 d-flex align-items-center">
+          <div class="form-check mt-md-3">
+            {{ form.predeterminada }}
+            <label class="form-check-label small" for="{{ form.predeterminada.id_for_label }}">{{ form.predeterminada.label|capfirst }}</label>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% if next %}{{ next }}{% else %}{% url 'cuentas:direcciones' %}{% endif %}" class="btn btn-outline-secondary px-4" data-cancelar>Cancelar</a>
+        <button type="submit" class="btn btn-primary px-4" data-loading="Guardando">Guardar dirección</button>
+      </div>
+    </form>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

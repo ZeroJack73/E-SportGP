@@ -1,0 +1,145 @@
+{% extends 'panel/base.html' %}
+{% block titulo_panel %}Categorías{% endblock %}
+
+{% block panel %}
+<h1 class="panel__h1">Productos y categorías</h1>
+<p class="panel__sub">Administra el catálogo, sus variantes y la estructura de categorías.</p>
+
+{% include 'panel/_tabs_catalogo.html' %}
+
+<div class="row g-4 mt-0">
+  <!-- Arbol: deporte (categoria principal) > categoria de producto -->
+  <div class="col-lg-7">
+    <div class="p-card">
+      <div class="p-card__cab">
+        <h2 class="p-card__titulo">Categorías</h2>
+        <button type="button" class="btn btn-outline-secondary px-4" data-nodo data-tipo="deporte"><i class="bi bi-plus-lg me-2"></i>Nueva categoría</button>
+      </div>
+      <div class="p-card__cuerpo pt-0">
+        <div class="d-flex justify-content-between small text-secondary px-2 mb-2"><span>Nombre / Jerarquía</span><span>Acción</span></div>
+        <ul class="p-arbol">
+          {% for n in arbol %}
+          <li>
+            <div class="p-arbol__fila">
+              <span>
+                <button type="button" class="toggle" data-bs-toggle="collapse" data-bs-target="#dep-{{ n.deporte.pk }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-label="Expandir"><i class="bi bi-chevron-{% if forloop.first %}down{% else %}right{% endif %}"></i></button>
+                <i class="bi {{ n.deporte.icono }} me-1"></i><span class="fw-semibold">{{ n.deporte.nombre }}</span>
+                <span class="meta ms-2">{{ n.deporte.n }} producto{{ n.deporte.n|pluralize }}</span>
+              </span>
+              <span class="d-flex gap-3">
+                <button type="button" class="link-mini" data-nodo data-tipo="deporte" data-id="{{ n.deporte.pk }}" data-nombre="{{ n.deporte.nombre }}" data-icono="{{ n.deporte.icono }}">Editar</button>
+                {% if not n.deporte.n %}
+                <form method="post" action="{% url 'panel:categoria_eliminar' 'deporte' n.deporte.pk %}" data-confirm="Se eliminará &quot;{{ n.deporte.nombre }}&quot;." data-confirm-title="Eliminar categoría" data-confirm-ok="Sí, eliminar">{% csrf_token %}<button class="link-mini link-mini--peligro">Eliminar</button></form>
+                {% endif %}
+              </span>
+            </div>
+            <ul class="p-arbol__hijos collapse {% if forloop.first %}show{% endif %}" id="dep-{{ n.deporte.pk }}">
+              {% for c in n.categorias %}
+                <li class="p-arbol__fila"><span>{{ c.categoria__nombre }} <span class="meta ms-2">{{ c.n }} producto{{ c.n|pluralize }}</span></span>
+                  <a class="link-mini" href="{% url 'panel:productos' %}?deporte={{ n.deporte.pk }}&categoria={{ c.categoria_id }}">Ver productos</a></li>
+              {% empty %}
+                <li class="p-arbol__fila meta">Sin productos en este deporte.</li>
+              {% endfor %}
+            </ul>
+          </li>
+          {% endfor %}
+        </ul>
+        <p class="meta small mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Cada producto pertenece a un deporte (categoría principal) y a una categoría de producto. La jerarquía se arma según los productos de cada deporte.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categorias de producto -->
+  <div class="col-lg-5">
+    <div class="p-card">
+      <div class="p-card__cab">
+        <h2 class="p-card__titulo fs-6">Categorías de producto</h2>
+        <button type="button" class="link-mini" data-nodo data-tipo="categoria"><i class="bi bi-plus-lg me-1"></i>Agregar</button>
+      </div>
+      <table class="p-tabla">
+        <thead><tr><th>Nombre</th><th>Productos</th><th>Acción</th></tr></thead>
+        <tbody>
+          {% for c in categorias %}
+          <tr>
+            <td><i class="bi {{ c.icono }} me-2 text-secondary"></i>{{ c.nombre }}</td>
+            <td>{{ c.n }}</td>
+            <td><div class="d-flex gap-3">
+              <button type="button" class="accion" data-nodo data-tipo="categoria" data-id="{{ c.pk }}" data-nombre="{{ c.nombre }}" data-icono="{{ c.icono }}">Editar</button>
+              {% if not c.n %}
+              <form method="post" action="{% url 'panel:categoria_eliminar' 'categoria' c.pk %}" data-confirm="Se eliminará &quot;{{ c.nombre }}&quot;." data-confirm-title="Eliminar categoría" data-confirm-ok="Sí, eliminar">{% csrf_token %}<button class="accion text-danger">Eliminar</button></form>
+              {% endif %}
+            </div></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div hidden data-guardar-url="{% url 'panel:categoria_guardar' %}">{% csrf_token %}</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const url = document.querySelector('[data-guardar-url]').dataset.guardarUrl;
+  const csrf = document.querySelector('[data-guardar-url] [name=csrfmiddlewaretoken]').value;
+  const esc = (t) => { const d = document.createElement('div'); d.textContent = t ?? ''; return d.innerHTML; };
+
+  // Flechas del arbol
+  document.querySelectorAll('.p-arbol__hijos').forEach((ul) => {
+    const icono = document.querySelector(`[data-bs-target="#${ul.id}"] i`);
+    ul.addEventListener('show.bs.collapse', () => { icono.className = 'bi bi-chevron-down'; });
+    ul.addEventListener('hide.bs.collapse', () => { icono.className = 'bi bi-chevron-right'; });
+  });
+
+  // Crear / editar con SweetAlert2
+  document.querySelectorAll('[data-nodo]').forEach((btn) => btn.addEventListener('click', () => {
+    const d = btn.dataset;
+    const editando = Boolean(d.id);
+    Swal.fire({
+      html: `<h2 class="swal-sp__h">${editando ? 'Editar categoría' : 'Nueva categoría'}</h2>
+        <div class="text-start mt-3">
+          <label class="form-label" for="n-tipo">Tipo</label>
+          <select id="n-tipo" class="form-select mb-3" ${editando ? 'disabled' : ''}>
+            <option value="deporte" ${d.tipo === 'deporte' ? 'selected' : ''}>Deporte (categoría principal)</option>
+            <option value="categoria" ${d.tipo === 'categoria' ? 'selected' : ''}>Categoría de producto</option>
+          </select>
+          <label class="form-label" for="n-nombre">Nombre</label>
+          <input id="n-nombre" class="form-control mb-3" maxlength="100" value="${esc(d.nombre || '')}" placeholder="Ej.: Natación, Calzado">
+          <label class="form-label" for="n-icono">Ícono (Bootstrap Icons)</label>
+          <div class="input-group">
+            <span class="input-group-text"><i id="n-prev" class="bi ${esc(d.icono || 'bi-tag')}"></i></span>
+            <input id="n-icono" class="form-control" value="${esc(d.icono || 'bi-tag')}" placeholder="bi-bicycle">
+          </div>
+          <div class="form-text">Consulta los nombres en icons.getbootstrap.com</div>
+        </div>`,
+      width: 480, showCancelButton: true, reverseButtons: true, buttonsStyling: false,
+      confirmButtonText: 'Guardar', cancelButtonText: 'Cancelar',
+      customClass: { popup: 'swal-sp', htmlContainer: 'swal-sp__html', actions: 'swal-sp__acciones swal-sp__acciones--fila',
+                     confirmButton: 'btn btn-primary', cancelButton: 'btn btn-outline-secondary' },
+      didOpen: (p) => {
+        const icono = p.querySelector('#n-icono');
+        icono.addEventListener('input', () => { p.querySelector('#n-prev').className = `bi ${icono.value.trim()}`; });
+        p.querySelector('#n-nombre').focus();
+      },
+      preConfirm: async () => {
+        const p = Swal.getPopup();
+        const nombre = p.querySelector('#n-nombre').value.trim();
+        if (!nombre) { Swal.showValidationMessage('Escribe un nombre'); return false; }
+        const datos = new FormData();
+        datos.append('csrfmiddlewaretoken', csrf);
+        datos.append('tipo', editando ? d.tipo : p.querySelector('#n-tipo').value);
+        datos.append('nombre', nombre);
+        datos.append('icono', p.querySelector('#n-icono').value);
+        if (editando) datos.append('id', d.id);
+        const r = await fetch(url, { method: 'POST', body: datos, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const json = await r.json();
+        if (!json.ok) { Swal.showValidationMessage(json.mensaje); return false; }
+        return true;
+      },
+    }).then((r) => { if (r.isConfirmed) window.location.reload(); });
+  }));
+})();
+</script>
+{% endblock %}

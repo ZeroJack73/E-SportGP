@@ -1,0 +1,61 @@
+{% extends 'panel/base.html' %}
+{% load ui %}
+{% block titulo_panel %}Productos{% endblock %}
+
+{% block panel %}
+<h1 class="panel__h1">Productos y categorías</h1>
+<p class="panel__sub">Administra el catálogo, sus variantes y la estructura de categorías.</p>
+
+{% include 'panel/_tabs_catalogo.html' %}
+<div class="p-card border-top-0 rounded-0 rounded-bottom mb-3">
+  <form method="get" class="p-card__cuerpo p-filtros" style="grid-template-columns: 1.6fr 1fr auto;">
+    <div>
+      <label class="form-label" for="q">Buscar productos</label>
+      <input type="search" id="q" name="q" value="{{ q }}" class="form-control" placeholder="Nombre, SKU o marca">
+    </div>
+    <div>
+      <label class="form-label" for="estado">Estado</label>
+      <select id="estado" name="estado" class="form-select" onchange="this.form.submit()">
+        <option value="">Todos</option>
+        <option value="activo" {% if estado == 'activo' %}selected{% endif %}>Activos</option>
+        <option value="inactivo" {% if estado == 'inactivo' %}selected{% endif %}>Inactivos</option>
+      </select>
+    </div>
+    <a href="{% url 'panel:producto_nuevo' %}" class="btn btn-primary px-4"><i class="bi bi-plus-lg me-2"></i>Nuevo producto</a>
+  </form>
+</div>
+
+<div class="p-card">
+  <div class="table-responsive">
+    <table class="p-tabla">
+      <thead><tr><th>Producto</th><th>Categoría</th><th>Precio (USD)</th><th>Variantes</th><th>Estado</th><th>Acción</th></tr></thead>
+      <tbody>
+        {% for p in productos %}
+        <tr>
+          <td class="fw-semibold">{{ p.nombre }}<div class="text-secondary fw-normal" style="font-size: .7rem;">{{ p.marca.nombre }} &middot; {{ p.categoria.nombre }}</div></td>
+          <td>{{ p.deporte.nombre }}</td>
+          <td>${{ p.precio|stringformat:".2f" }}</td>
+          <td>{{ p.n_variantes }}</td>
+          <td>
+            <form method="post" action="{% url 'panel:producto_estado' p.pk %}" class="d-inline"
+                  data-confirm="{% if p.disponible %}El producto dejará de mostrarse en la tienda.{% else %}El producto volverá a mostrarse en la tienda.{% endif %}"
+                  data-confirm-title="{% if p.disponible %}Desactivar{% else %}Activar{% endif %} &quot;{{ p.nombre }}&quot;" data-confirm-icon="question"
+                  data-confirm-ok="Sí, {% if p.disponible %}desactivar{% else %}activar{% endif %}" data-confirm-color="#1f5bd8">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="accion p-texto-estado {% if not p.disponible %}estado--inactivo{% endif %}" style="color: inherit;" title="Cambiar estado">
+                {% if p.disponible %}Activo{% else %}Inactivo{% endif %}
+              </button>
+            </form>
+          </td>
+          <td><a class="accion" href="{% url 'panel:producto_editar' p.pk %}">Editar</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-secondary py-5"><i class="bi bi-search me-2"></i>No hay productos con esos filtros.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include 'panel/_paginacion.html' with pagina=productos etiqueta="productos" %}
+{% endblock %}

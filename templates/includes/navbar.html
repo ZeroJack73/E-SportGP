@@ -1,0 +1,72 @@
+{% with sel_dep=request.GET.deporte %}
+<header class="sp-header sticky-top">
+  <div class="container-xl">
+    <div class="sp-header__top d-flex flex-wrap align-items-center gap-3 gap-lg-5">
+      <a class="sp-logo" href="{% url 'tienda:inicio' %}">SportPG</a>
+
+      <form class="sp-buscador order-3 order-md-2 w-100 w-md-auto" role="search" action="{% url 'tienda:inicio' %}">
+        <i class="bi bi-search"></i>
+        <input class="form-control" type="search" name="q" value="{{ request.GET.q|default:'' }}"
+               placeholder="Busca productos, marcas o deportes" aria-label="Buscar">
+      </form>
+
+      <div class="d-flex align-items-center gap-4 gap-lg-5 ms-auto order-2 order-md-3">
+        {% if user.is_staff %}
+        <a class="sp-accion" href="{% url 'panel:inicio' %}">
+          <i class="bi bi-speedometer2"></i><span class="d-none d-sm-inline">Panel de administración</span>
+        </a>
+        {% else %}
+        <a class="sp-accion" href="{% url 'carrito:detalle' %}">
+          <i class="bi bi-cart3"></i><span class="d-none d-sm-inline">Carrito</span>
+          <span class="sp-badge">{{ carrito|length }}</span>
+        </a>
+        {% endif %}
+
+        <div class="dropdown">
+          <button class="sp-accion dropdown-toggle-none" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person"></i>
+            <span class="d-none d-sm-inline">{% if user.is_authenticated %}{{ user.first_name|default:"Mi cuenta" }}{% else %}Mi cuenta{% endif %}</span>
+            <i class="bi bi-chevron-down" style="font-size: .8rem;"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            {% if user.is_authenticated %}
+              <li><h6 class="dropdown-header">{{ user.email }}</h6></li>
+              {% if user.is_staff %}
+                <li><a class="dropdown-item" href="{% url 'panel:pedidos' %}"><i class="bi bi-receipt"></i>Gestión de pedidos</a></li>
+                <li><a class="dropdown-item" href="{% url 'panel:productos' %}"><i class="bi bi-box-seam"></i>Productos</a></li>
+                <li><a class="dropdown-item" href="{% url 'panel:inventario' %}"><i class="bi bi-boxes"></i>Inventario</a></li>
+              {% else %}
+                <li><a class="dropdown-item" href="{% url 'cuentas:perfil' %}"><i class="bi bi-person-gear"></i>Mi perfil</a></li>
+                <li><a class="dropdown-item" href="{% url 'pedidos:lista' %}"><i class="bi bi-bag-check"></i>Mis pedidos</a></li>
+                <li><a class="dropdown-item" href="{% url 'cuentas:direcciones' %}"><i class="bi bi-geo-alt"></i>Mis direcciones</a></li>
+              {% endif %}
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="post" action="{% url 'cuentas:logout' %}" data-confirm="Se cerrará tu sesión actual." data-confirm-title="Cerrar sesión" data-confirm-icon="question" data-confirm-ok="Sí, salir" data-confirm-color="#1f5bd8">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right"></i>Cerrar sesión</button>
+                </form>
+              </li>
+            {% else %}
+              <li><a class="dropdown-item" href="{% url 'cuentas:login' %}?next={{ request.get_full_path|urlencode }}"><i class="bi bi-box-arrow-in-right"></i>Iniciar sesión</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:registro' %}"><i class="bi bi-person-plus"></i>Crear cuenta</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sp-nav">
+    <div class="container-xl d-flex align-items-center">
+      <div class="d-flex overflow-auto text-nowrap">
+        <a class="nav-link {% if request.resolver_match.app_name == 'tienda' and not sel_dep %}active{% endif %}" href="{% url 'tienda:inicio' %}">Todos los productos</a>
+        {% for d in deportes_menu %}
+          <a class="nav-link {% if sel_dep == d.slug %}active{% endif %}" href="{{ d.get_absolute_url }}">{{ d.nombre }}</a>
+        {% endfor %}
+      </div>
+      <span class="sp-nav__lema ms-auto d-none d-lg-inline">Diseñado para tu siguiente meta</span>
+    </div>
+  </nav>
+</header>
+{% endwith %}

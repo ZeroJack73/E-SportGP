@@ -1,0 +1,227 @@
+/* ==========================================================================
+   SportPG - Sistema visual
+   ========================================================================== */
+:root {
+  --sp-oscuro: #1f2329;
+  --sp-azul: #1f5bd8;
+  --sp-azul-hover: #1a4fbf;
+  --sp-naranja: #e8711f;
+  --sp-texto: #1f2329;
+  --sp-gris: #6b7280;
+  --sp-borde: #e1e4e8;
+  --sp-suave: #f3f4f6;
+  --sp-img: #eef0f3;
+
+  --bs-body-font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --bs-body-color: var(--sp-texto);
+  --bs-primary: var(--sp-azul);
+  --bs-primary-rgb: 31, 91, 216;
+  --bs-link-color: var(--sp-azul);
+  --bs-link-color-rgb: 31, 91, 216;
+  --bs-link-hover-color: var(--sp-azul-hover);
+  --bs-border-color: var(--sp-borde);
+  --bs-border-radius: .375rem;
+}
+
+body { display: flex; flex-direction: column; min-height: 100vh; background: #fff; }
+main { flex: 1; }
+a { text-decoration: none; }
+
+/* Botones */
+.btn { font-weight: 600; font-size: .9rem; padding: .65rem 1rem; }
+.btn-primary { --bs-btn-bg: var(--sp-azul); --bs-btn-border-color: var(--sp-azul);
+  --bs-btn-hover-bg: var(--sp-azul-hover); --bs-btn-hover-border-color: var(--sp-azul-hover);
+  --bs-btn-active-bg: var(--sp-azul-hover); --bs-btn-disabled-bg: var(--sp-azul); }
+.btn-outline-secondary { --bs-btn-color: var(--sp-texto); --bs-btn-border-color: var(--sp-borde);
+  --bs-btn-hover-bg: var(--sp-suave); --bs-btn-hover-color: var(--sp-texto); --bs-btn-hover-border-color: var(--sp-borde); }
+
+/* Formularios */
+.form-label { font-size: .82rem; font-weight: 500; margin-bottom: .4rem; }
+.form-control, .form-select { font-size: .88rem; padding: .62rem .8rem; border-color: var(--sp-borde); }
+.form-control::placeholder { color: #9aa0a8; }
+.form-control:focus, .form-select:focus { border-color: var(--sp-azul); box-shadow: 0 0 0 .2rem rgba(31, 91, 216, .12); }
+.form-text { font-size: .74rem; color: var(--sp-gris); }
+.form-check-input:checked { background-color: var(--sp-azul); border-color: var(--sp-azul); }
+
+/* Logo */
+.sp-logo { display: inline-block; font-weight: 800; font-size: 1.35rem; color: var(--sp-texto); letter-spacing: -.3px; line-height: 1.1; }
+.sp-logo::after { content: ''; display: block; width: 24px; height: 3px; margin-top: 4px; background: var(--sp-naranja); }
+.sp-logo:hover { color: var(--sp-texto); }
+.sp-logo--claro, .sp-logo--claro:hover { color: #fff; }
+
+/* Campo de contrasena con boton de mostrar */
+.campo-password { position: relative; }
+.campo-password .form-control { padding-right: 2.75rem; }
+.campo-password .btn-ver { position: absolute; top: 0; right: 0; height: 100%; width: 2.75rem; border: 0; background: none; color: var(--sp-gris); font-size: 1.05rem; }
+.campo-password .form-control.is-invalid { background-image: none; }
+
+/* ==========================================================================
+   Pantallas de acceso (login / registro)
+   ========================================================================== */
+.auth { display: flex; min-height: 100vh; }
+.auth__lado {
+  flex: 0 0 40%; max-width: 40%;
+  background: var(--sp-oscuro); color: #fff;
+  display: flex; flex-direction: column; padding: 2.5rem 1.25rem 2.5rem 1.25rem;
+}
+.auth__lado-inner { width: 100%; max-width: 330px; margin-left: 4%; display: flex; flex-direction: column; flex: 1; }
+.auth__titular { font-weight: 800; text-transform: uppercase; font-size: clamp(1.8rem, 2.6vw, 2.35rem); line-height: 1.32; letter-spacing: -.3px; margin: auto 0 1.5rem; }
+.auth__texto { color: #b7bcc4; font-size: .95rem; max-width: 300px; }
+.auth__lineas { margin: 3.5rem 0 2.5rem; }
+.auth__lineas span { display: block; height: 1px; background: #3a3f47; margin-bottom: 15px; }
+.auth__lineas span:first-child { height: 3px; background: linear-gradient(to right, var(--sp-naranja) 0 52px, #3a3f47 52px); }
+.auth__deportes { font-size: .68rem; font-weight: 600; letter-spacing: .5px; color: #d6d9de; margin-bottom: 2.75rem; }
+.auth__lema { font-size: .7rem; font-weight: 700; letter-spacing: .6px; }
+
+.auth__contenido { flex: 1; display: flex; flex-direction: column; padding: 2.5rem 1.5rem 1.5rem; }
+.auth__form { width: 100%; max-width: 420px; margin: auto; padding: 1.5rem 0; }
+.auth__paso { color: var(--sp-azul); font-size: .66rem; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; margin-bottom: 1.25rem; }
+.auth__h1 { font-weight: 700; font-size: 1.7rem; margin-bottom: .5rem; letter-spacing: -.3px; }
+.auth__sub { color: var(--sp-gris); font-size: .88rem; margin-bottom: 2rem; }
+.auth__nota { background: var(--sp-suave); border-radius: .25rem; padding: .7rem .75rem; }
+.auth__nota-titulo { font-size: .62rem; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; color: #4b5260; }
+.auth__nota-texto { font-size: .74rem; color: var(--sp-gris); }
+.auth__pie { width: 100%; max-width: 420px; margin: 0 auto; font-size: .7rem; color: var(--sp-gris); }
+.auth__pie a { color: var(--sp-gris); }
+.auth__pie a:hover { color: var(--sp-texto); }
+.auth .small-link { font-size: .78rem; font-weight: 500; }
+
+@media (max-width: 991.98px) {
+  .auth { flex-direction: column; }
+  .auth__lado { flex: none; max-width: none; padding: 1.5rem; }
+  .auth__titular { margin: 1.5rem 0 .75rem; font-size: 1.6rem; }
+  .auth__lineas, .auth__deportes, .auth__lema { display: none; }
+}
+
+/* ==========================================================================
+   Encabezado de la tienda
+   ========================================================================== */
+.sp-header { background: #fff; border-bottom: 1px solid var(--sp-borde); }
+.sp-header__top { padding: .9rem 0; }
+.sp-buscador { position: relative; flex: 1; max-width: 560px; }
+.sp-buscador i { position: absolute; left: .85rem; top: 50%; transform: translateY(-50%); color: var(--sp-texto); }
+.sp-buscador .form-control { background: var(--sp-suave); border-color: var(--sp-borde); padding-left: 2.4rem; }
+.sp-buscador .form-control:focus { background: #fff; }
+.sp-accion { display: inline-flex; align-items: center; gap: .5rem; color: var(--sp-texto); font-size: .85rem; font-weight: 500; background: none; border: 0; padding: 0; }
+.sp-accion:hover { color: var(--sp-azul); }
+.sp-accion > i { font-size: 1.25rem; }
+.sp-badge { background: var(--sp-azul); color: #fff; font-size: .68rem; font-weight: 600; min-width: 26px; padding: .1rem .5rem; border-radius: 1rem; text-align: center; margin-top: -.9rem; }
+.sp-nav { border-top: 1px solid var(--sp-borde); }
+.sp-nav .nav-link { color: var(--sp-texto); font-size: .82rem; font-weight: 500; padding: .7rem 0; margin-right: 2.75rem; border-bottom: 2px solid transparent; }
+.sp-nav .nav-link:hover, .sp-nav .nav-link.active { color: var(--sp-azul); }
+.sp-nav__lema { font-size: .72rem; color: var(--sp-gris); }
+.dropdown-menu { font-size: .86rem; border-color: var(--sp-borde); box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .08); }
+.dropdown-item { padding: .45rem 1rem; }
+.dropdown-item i { width: 1.25rem; }
+
+/* ==========================================================================
+   Catalogo
+   ========================================================================== */
+.sp-breadcrumb { font-size: .75rem; color: var(--sp-gris); margin-bottom: 1.6rem; }
+.sp-breadcrumb a { color: var(--sp-gris); }
+.sp-breadcrumb a:hover { color: var(--sp-texto); }
+.sp-h1 { font-weight: 700; font-size: 2rem; letter-spacing: -.5px; margin-bottom: .35rem; }
+.sp-sub { color: var(--sp-gris); font-size: .9rem; }
+
+/* Filtros */
+.filtros__titulo { font-size: 1.2rem; font-weight: 700; margin: 0; }
+.filtros__limpiar { font-size: .74rem; font-weight: 500; }
+.filtros__grupo { padding: 1rem 0; border-bottom: 1px solid var(--sp-borde); }
+.filtros__grupo:last-child { border-bottom: 0; }
+.filtros__label { font-size: .82rem; font-weight: 600; margin-bottom: .6rem; display: block; }
+.filtros .form-check { font-size: .78rem; color: #4b5260; margin-bottom: .3rem; min-height: auto; }
+.filtros .form-check-input { border-radius: 2px; margin-top: .15rem; }
+.filtros .form-select, .filtros .form-control { font-size: .75rem; padding: .5rem .6rem; }
+.talla-btn { min-width: 40px; font-size: .72rem; font-weight: 500; padding: .35rem .5rem; color: #4b5260; border: 1px solid var(--sp-borde); border-radius: 2px; background: #fff; }
+.btn-check:checked + .talla-btn { border-color: var(--sp-azul); background: var(--sp-azul); color: #fff; }
+.color-swatch { display: inline-block; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #d0d4da; cursor: pointer; transition: box-shadow .1s; }
+.btn-check:checked + .color-swatch { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--sp-azul); }
+.btn-check:focus-visible + .color-swatch, .btn-check:focus-visible + .talla-btn { outline: 2px solid var(--sp-azul); outline-offset: 2px; }
+
+.catalogo__conteo { font-size: .8rem; color: var(--sp-gris); }
+.catalogo__orden { width: auto; min-width: 200px; font-size: .78rem; font-weight: 500; }
+
+/* Tarjeta de producto */
+.producto-card { display: flex; flex-direction: column; height: 100%; border: 1px solid #d9dde2; border-radius: .25rem; overflow: hidden; color: var(--sp-texto); background: #fff; transition: box-shadow .15s ease, border-color .15s ease; }
+.producto-card:hover { color: var(--sp-texto); border-color: #c4cad2; box-shadow: 0 .5rem 1.25rem rgba(31, 35, 41, .08); }
+.producto-card__img { position: relative; aspect-ratio: 16 / 9.5; background: var(--sp-img); border-bottom: 1px solid var(--sp-borde); overflow: hidden; }
+.producto-card__img img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s ease; }
+.producto-card:hover .producto-card__img img { transform: scale(1.03); }
+.producto-card__placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; color: #8b929b; }
+.producto-card__placeholder i { font-size: 1.6rem; }
+.producto-card__placeholder span { font-size: .62rem; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+.producto-card__badge { position: absolute; top: .55rem; left: .55rem; background: #fff; color: var(--sp-azul); font-size: .58rem; font-weight: 700; letter-spacing: .3px; padding: .3rem .7rem; border-radius: 2px; }
+.producto-card__body { padding: .8rem .65rem .65rem; display: flex; flex-direction: column; flex: 1; }
+.producto-card__marca { font-size: .66rem; font-weight: 600; color: #4b5260; }
+.producto-card__nombre { font-size: .86rem; font-weight: 600; margin: .15rem 0 1.4rem; }
+.producto-card__precio { font-size: 1.05rem; font-weight: 700; margin-top: auto; }
+.producto-card__estado { display: flex; justify-content: space-between; align-items: center; font-size: .68rem; color: var(--sp-gris); margin-top: .35rem; }
+.producto-card__estado i { color: var(--sp-texto); font-size: .9rem; }
+.estado--pocas { color: var(--sp-naranja); }
+.producto-card--agotado .producto-card__estado i { color: #b5bac1; }
+.producto-card--agotado img { filter: grayscale(.5); opacity: .8; }
+
+/* Paginacion */
+.sp-paginacion { display: flex; align-items: center; gap: .45rem; list-style: none; margin: 0; padding: 0; }
+.sp-paginacion a, .sp-paginacion span { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 34px; padding: 0 .4rem; font-size: .75rem; color: var(--sp-texto); border: 1px solid var(--sp-borde); border-radius: 2px; }
+.sp-paginacion a:hover { border-color: var(--sp-azul); color: var(--sp-azul); }
+.sp-paginacion .activa { background: var(--sp-azul); border-color: var(--sp-azul); color: #fff; }
+.sp-paginacion .flecha { border: 0; font-size: .95rem; }
+.sp-paginacion .deshabilitada { color: #c0c5cc; border: 0; }
+
+/* Pie */
+.sp-footer { background: var(--sp-suave); border-top: 1px solid var(--sp-borde); padding: 1.4rem 0; font-size: .72rem; color: var(--sp-gris); }
+.sp-footer .sp-footer__marca { font-weight: 800; font-size: 1rem; color: var(--sp-texto); }
+.sp-footer a { color: var(--sp-gris); }
+.sp-footer a:hover { color: var(--sp-texto); }
+
+/* Utilidades heredadas (carrito, pedidos) */
+.cantidad-input { max-width: 90px; }
+.img-thumb { width: 56px; height: 56px; object-fit: cover; border-radius: .25rem; background: var(--sp-img); }
+
+/* ==========================================================================
+   Barras de desplazamiento (vertical y horizontal) con la paleta SportPG
+   ========================================================================== */
+:root {
+  --sp-scroll-pista: #f3f4f6;      /* fondo de la barra */
+  --sp-scroll-barra: #c3cad6;      /* barra en reposo: gris azulado suave */
+  --sp-scroll-hover: #1f5bd8;      /* azul de marca al pasar el mouse */
+  --sp-scroll-activa: #1a4fbf;     /* azul mas oscuro al arrastrar */
+}
+
+/* Firefox (solo ahi: en Chrome/Edge estas propiedades anularian los estilos ::-webkit-scrollbar) */
+@supports (-moz-appearance: none) {
+  html { scrollbar-color: var(--sp-scroll-barra) var(--sp-scroll-pista); }
+  * { scrollbar-width: thin; }
+  .table-responsive, .dropdown-menu, .swal2-html-container, .swal-sp__tabla, .sp-nav .overflow-auto, .pd-galeria__miniaturas {
+    scrollbar-color: var(--sp-scroll-barra) #fff;
+  }
+  .panel-body { scrollbar-color: var(--sp-scroll-barra) var(--sp-suave); }
+}
+
+/* Chrome, Edge, Safari */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--sp-scroll-pista); }
+::-webkit-scrollbar-thumb {
+  background-color: var(--sp-scroll-barra);
+  border-radius: 10px;
+  border: 2px solid var(--sp-scroll-pista);   /* deja un margen y la hace ver mas delgada */
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--sp-scroll-hover); }
+::-webkit-scrollbar-thumb:active { background-color: var(--sp-scroll-activa); }
+::-webkit-scrollbar-corner { background: var(--sp-scroll-pista); }
+::-webkit-scrollbar-button { display: none; }
+
+/* Zonas internas con fondo blanco (tablas, menus, ventanas de SweetAlert2): pista blanca */
+.table-responsive::-webkit-scrollbar-track, .dropdown-menu::-webkit-scrollbar-track,
+.swal2-html-container::-webkit-scrollbar-track, .swal-sp__tabla::-webkit-scrollbar-track,
+.sp-nav .overflow-auto::-webkit-scrollbar-track, .pd-galeria__miniaturas::-webkit-scrollbar-track { background: #fff; }
+.table-responsive::-webkit-scrollbar-thumb, .dropdown-menu::-webkit-scrollbar-thumb,
+.swal2-html-container::-webkit-scrollbar-thumb, .swal-sp__tabla::-webkit-scrollbar-thumb,
+.sp-nav .overflow-auto::-webkit-scrollbar-thumb, .pd-galeria__miniaturas::-webkit-scrollbar-thumb { border-color: #fff; }
+
+/* Barras horizontales mas finas en la barra de deportes y miniaturas */
+.sp-nav .overflow-auto::-webkit-scrollbar, .pd-galeria__miniaturas::-webkit-scrollbar { height: 6px; }
+
+/* Panel de administracion: pista del mismo gris del fondo */
+.panel-body::-webkit-scrollbar-track { background: var(--sp-suave); }

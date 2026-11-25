@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% block title %}{% if deporte_titulo %}{{ deporte_titulo.nombre }}{% else %}Catálogo{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-xl">
+  <nav class="sp-breadcrumb" aria-label="breadcrumb">
+    <a href="{% url 'tienda:inicio' %}">Inicio</a> &nbsp;/&nbsp;
+    {% if deporte_titulo %}<a href="{% url 'tienda:inicio' %}">Catálogo</a> &nbsp;/&nbsp; <span>{{ deporte_titulo.nombre }}</span>{% else %}<span>Catálogo</span>{% endif %}
+  </nav>
+
+  <h1 class="sp-h1">{% if q %}Resultados para "{{ q }}"{% else %}Todo para darlo todo.{% endif %}</h1>
+  <p class="sp-sub mb-4 pb-2">Encuentra el equipo que va contigo, dentro y fuera de la cancha.</p>
+
+  <div class="row g-4">
+    <!-- Filtros -->
+    <aside class="col-lg-3" style="max-width: 300px;">
+      <div class="d-flex justify-content-between align-items-center mb-2 d-lg-flex">
+        <h2 class="filtros__titulo">Filtros</h2>
+        <div class="d-flex align-items-center gap-3">
+          {% if hay_filtros %}<a href="{% url 'tienda:inicio' %}" class="filtros__limpiar">Limpiar</a>{% else %}<span class="filtros__limpiar text-primary opacity-50">Limpiar</span>{% endif %}
+          <button class="btn btn-sm btn-outline-secondary d-lg-none py-1" type="button" data-bs-toggle="collapse" data-bs-target="#filtros-panel" aria-expanded="false">
+            <i class="bi bi-sliders"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="collapse d-lg-block" id="filtros-panel">
+      <form id="filtros" method="get" action="{% url 'tienda:inicio' %}" class="filtros">
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+        {% if orden %}<input type="hidden" name="orden" value="{{ orden }}">{% endif %}
+
+        <div class="filtros__grupo">
+          <span class="filtros__label">Deporte</span>
+          {% for d in deportes %}
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="deporte" value="{{ d.slug }}" id="dep-{{ d.slug }}" {% if d.slug in sel.deporte %}checked{% endif %}>
+              <label class="form-check-label" for="dep-{{ d.slug }}">{{ d.nombre }}</label>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="filtros__grupo">
+          <label class="filtros__label" for="f-categoria">Categoría</label>
+          <select id="f-categoria" name="categoria" class="form-select">
+            <option value="">Todas las categorías</option>
+            {% for c in categorias %}
+              <option value="{{ c.slug }}" {% if c.slug == categoria_sel %}selected{% endif %}>{{ c.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filtros__grupo">
+          <span class="filtros__label">Marca</span>
+          {% for m in marcas %}
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="marca" value="{{ m.slug }}" id="marca-{{ m.slug }}" {% if m.slug in sel.marca %}checked{% endif %}>
+              <label class="form-check-label" for="marca-{{ m.slug }}">{{ m.nombre }}</label>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="filtros__grupo">
+          <span class="filtros__label">Talla</span>
+          <div class="d-flex flex-wrap gap-2">
+            {% for t in tallas %}
+              <input type="checkbox" class="btn-check" name="talla" value="{{ t.nombre }}" id="talla-{{ t.nombre }}" autocomplete="off" {% if t.nombre in sel.talla %}checked{% endif %}>
+              <label class="talla-btn text-center" for="talla-{{ t.nombre }}">{{ t.nombre }}</label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="filtros__grupo">
+          <span class="filtros__label">Color</span>
+          <div class="d-flex flex-wrap gap-3">
+            {% for c in colores %}
+              <input type="checkbox" class="btn-check" name="color" value="{{ c.nombre }}" id="color-{{ c.pk }}" autocomplete="off" {% if c.nombre in sel.color %}checked{% endif %}>
+              <label class="color-swatch" for="color-{{ c.pk }}" style="background: {{ c.hex }};" title="{{ c.nombre }}"><span class="visually-hidden">{{ c.nombre }}</span></label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="filtros__grupo">
+          <span class="filtros__label">Precio (USD)</span>
+          <div class="d-flex gap-2 mb-3">
+            <input type="number" class="form-control" name="precio_min" min="0" step="1" placeholder="$0" value="{{ precio_min }}" aria-label="Precio mínimo">
+            <input type="number" class="form-control" name="precio_max" min="0" step="1" placeholder="$5,000" value="{{ precio_max }}" aria-label="Precio máximo">
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="disponibles" value="1" id="f-disp" {% if solo_disponibles %}checked{% endif %}>
+            <label class="form-check-label" for="f-disp">Solo disponibles</label>
+          </div>
+        </div>
+      </form>
+      </div>
+    </aside>
+
+    <!-- Resultados -->
+    <section class="col-lg">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="catalogo__conteo">{{ total }} producto{{ total|pluralize }}</span>
+        <select class="form-select catalogo__orden" aria-label="Ordenar" data-orden>
+          {% for valor, etiqueta in ordenes %}
+            <option value="{{ valor }}" {% if valor == orden %}selected{% endif %}>Ordenar: {{ etiqueta }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if productos %}
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
+          {% for p in productos %}
+            <div class="col">{% include 'includes/card_producto.html' %}</div>
+          {% endfor %}
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+          <span class="catalogo__conteo">Mostrando {{ productos.start_index }}–{{ productos.end_index }} de {{ total }} producto{{ total|pluralize }}</span>
+          {% if productos.has_other_pages %}
+          <ul class="sp-paginacion">
+            <li>{% if productos.has_previous %}<a class="flecha" href="{% querystring page=productos.previous_page_number %}" aria-label="Anterior"><i class="bi bi-chevron-left"></i></a>{% else %}<span class="flecha deshabilitada"><i class="bi bi-chevron-left"></i></span>{% endif %}</li>
+            {% for n in paginas %}
+              <li>
+                {% if n == productos.number %}<span class="activa">{{ n }}</span>
+                {% elif n == productos.paginator.ELLIPSIS %}<span>…</span>
+                {% else %}<a href="{% querystring page=n %}">{{ n }}</a>{% endif %}
+              </li>
+            {% endfor %}
+            <li>{% if productos.has_next %}<a class="flecha" href="{% querystring page=productos.next_page_number %}" aria-label="Siguiente"><i class="bi bi-chevron-right"></i></a>{% else %}<span class="flecha deshabilitada"><i class="bi bi-chevron-right"></i></span>{% endif %}</li>
+          </ul>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="text-center border rounded py-5 px-3">
+          <i class="bi bi-search fs-1 text-secondary"></i>
+          <h5 class="fw-semibold mt-3">No encontramos productos</h5>
+          <p class="sp-sub">Prueba con otros filtros o busca algo diferente.</p>
+          <a href="{% url 'tienda:inicio' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise me-1"></i>Limpiar filtros</a>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Filtros: se aplican automaticamente al cambiar
+  (function () {
+    const form = document.getElementById('filtros');
+    form.addEventListener('change', () => form.submit());
+    document.querySelector('[data-orden]').addEventListener('change', (e) => {
+      let campo = form.querySelector('input[name="orden"]');
+      if (!campo) { campo = document.createElement('input'); campo.type = 'hidden'; campo.name = 'orden'; form.appendChild(campo); }
+      campo.value = e.target.value;
+      form.submit();
+    });
+  })();
+</script>
+{% endblock %}

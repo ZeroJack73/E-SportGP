@@ -1,0 +1,183 @@
+{% extends 'panel/base.html' %}
+{% load ui %}
+{% block titulo_panel %}Inventario{% endblock %}
+
+{% block panel %}
+<h1 class="panel__h1">Inventario</h1>
+<p class="panel__sub">Controla existencias y registra cada entrada o salida por variante.</p>
+
+{% if agotadas or bajas %}
+<div class="p-aviso">
+  <div class="p-aviso__titulo"><i class="bi bi-exclamation-triangle me-2"></i>{{ agotadas|add:bajas }} variante{{ agotadas|add:bajas|pluralize }} requiere{{ agotadas|add:bajas|pluralize:"n" }} atención</div>
+  <div class="p-aviso__texto">{{ bajas }} con stock bajo &middot; {{ agotadas }} agotada{{ agotadas|pluralize }} &middot; Se avisa cuando el stock llega al mínimo de cada variante (por defecto {{ umbral }} unidades).</div>
+</div>
+{% endif %}
+
+<div class="p-card mb-3">
+  <form method="get" class="p-card__cuerpo p-filtros" style="grid-template-columns: 1.6fr 1fr auto;">
+    <div>
+      <label class="form-label" for="q">Buscar variante</label>
+      <input type="search" id="q" name="q" value="{{ q }}" class="form-control" placeholder="Producto, talla, color o SKU">
+    </div>
+    <div>
+      <label class="form-label" for="disp">Disponibilidad</label>
+      <select id="disp" name="disp" class="form-select" onchange="this.form.submit()">
+        <option value="">Todas</option>
+        <option value="normal" {% if disp == 'normal' %}selected{% endif %}>Normal</option>
+        <option value="bajo" {% if disp == 'bajo' %}selected{% endif %}>Stock bajo</option>
+        <option value="agotado" {% if disp == 'agotado' %}selected{% endif %}>Agotado</option>
+      </select>
+    </div>
+    <button type="button" class="btn btn-primary px-4" data-abrir-movimiento>Registrar movimiento</button>
+  </form>
+</div>
+
+<div class="p-card">
+  <div class="table-responsive">
+    <table class="p-tabla">
+      <thead><tr><th>Producto / variante</th><th>SKU</th><th>Stock</th><th>Mínimo</th><th>Alerta</th><th>Acción</th></tr></thead>
+      <tbody>
+        {% for v in variantes %}
+        <tr>
+          <td>{{ v.nombre_corto }}</td>
+          <td class="sp-mono">{{ v.sku }}</td>
+          <td class="fw-semibold">{{ v.stock }}</td>
+          <td>{{ v.stock_minimo }}</td>
+          <td><span class="p-texto-estado alerta--{{ v.alerta }}">{% if v.alerta == 'agotado' %}Agotado{% elif v.alerta == 'bajo' %}Bajo{% else %}Normal{% endif %}</span></td>
+          <td><div class="d-flex gap-3">
+            <button type="button" class="accion" data-historial="{% url 'panel:historial' v.pk %}">Ver historial</button>
+            <button type="button" class="accion" data-mover="{{ v.pk }}">Mover</button>
+          </div></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-secondary py-5">No hay variantes con esos filtros.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="p-paginacion">
+  <span>Mostrando {{ variantes.object_list|length }} de {{ variantes.paginator.count }} variante{{ variantes.paginator.count|pluralize }}{% if ultima %} &middot; Último movimiento: {{ ultima|date:"j b. Y, H:i" }}{% endif %}</span>
+  {% if variantes.has_other_pages %}
+  <div class="d-flex gap-2">
+    {% if variantes.has_previous %}<a class="btn btn-outline-secondary" href="{% querystring page=variantes.previous_page_number %}">Anterior</a>{% else %}<span class="btn btn-outline-secondary disabled">Anterior</span>{% endif %}
+    {% if variantes.has_next %}<a class="btn btn-outline-secondary" href="{% querystring page=variantes.next_page_number %}">Siguiente</a>{% else %}<span class="btn btn-outline-secondary disabled">Siguiente</span>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Registrar movimiento -->
+<div class="collapse {% if mostrar_form %}show{% endif %}" id="movimiento">
+  <div class="row g-4 mt-2">
+    <div class="col-lg-7">
+      <form method="post" class="p-card" novalidate>
+        {% csrf_token %}
+        {% include 'includes/form_errores.html' %}
+        <div class="p-card__cab">
+          <h2 class="p-card__titulo">Registrar movimiento</h2>
+          <button type="button" class="btn btn-sm btn-link text-secondary" data-bs-toggle="collapse" data-bs-target="#movimiento" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="p-card__cuerpo pt-0">
+          {% campo_simple form.variante ayuda=False %}
+          <div class="row">
+            <div class="col-sm-6">{% campo_simple form.tipo ayuda=False %}</div>
+            <div class="col-sm-6">{% campo_simple form.cantidad ayuda=False %}</div>
+          </div>
+          {% campo_simple form.motivo ayuda=False %}
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="button" class="btn btn-outline-secondary px-4" data-bs-toggle="collapse" data-bs-target="#movimiento">Cancelar</button>
+            <button type="submit" class="btn btn-primary px-4" data-loading="Guardando">Guardar movimiento</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="col-lg-5">
+      <div class="p-card p-card__cuerpo">
+        <h3 class="p-card__titulo fs-6 mb-3">Antes de confirmar</h3>
+        <div class="sp-mono mb-3" data-r="sku">Selecciona una variante</div>
+        <div class="resumen__fila"><span>Stock actual</span><span class="fw-semibold" data-r="actual">—</span></div>
+        <div class="resumen__fila"><span data-r="tipo">Entrada</span><span class="fw-semibold" data-r="delta">—</span></div>
+        <div class="resumen__fila"><span>Nuevo stock</span><span class="fw-bold text-primary" data-r="nuevo">—</span></div>
+        <p class="sp-meta mt-3 mb-0">No se permiten movimientos que dejen stock negativo. El motivo y el responsable ({{ user.get_full_name|default:user.email }}) quedan registrados.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ datos_variantes|json_script:"datos-variantes" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const datos = JSON.parse(document.getElementById('datos-variantes').textContent);
+  const panel = document.getElementById('movimiento');
+  const sel = document.getElementById('id_variante');
+  const tipo = document.getElementById('id_tipo');
+  const cant = document.getElementById('id_cantidad');
+  const r = (k) => document.querySelector(`[data-r="${k}"]`);
+  const abrir = () => { bootstrap.Collapse.getOrCreateInstance(panel).show(); setTimeout(() => panel.scrollIntoView({ behavior: 'smooth' }), 200); };
+
+  function resumen() {
+    const v = datos[sel.value];
+    const n = parseInt(cant.value, 10) || 0;
+    const entrada = tipo.value === 'entrada';
+    r('tipo').textContent = entrada ? 'Entrada' : 'Salida';
+    if (!v) { ['actual', 'delta', 'nuevo'].forEach((k) => (r(k).textContent = '—')); r('sku').textContent = 'Selecciona una variante'; return; }
+    const nuevo = entrada ? v.stock + n : v.stock - n;
+    r('sku').textContent = v.sku;
+    r('actual').textContent = `${v.stock} unidades`;
+    r('delta').textContent = `${entrada ? '+' : '-'}${n} unidades`;
+    r('nuevo').textContent = nuevo < 0 ? 'No permitido (negativo)' : `${nuevo} unidades`;
+    r('nuevo').className = nuevo < 0 ? 'fw-bold text-danger' : 'fw-bold text-primary';
+  }
+  [sel, tipo, cant].forEach((el) => el.addEventListener('input', resumen));
+  resumen();
+
+  document.querySelector('[data-abrir-movimiento]').addEventListener('click', abrir);
+  document.querySelectorAll('[data-mover]').forEach((b) => b.addEventListener('click', () => {
+    sel.value = b.dataset.mover; resumen(); abrir(); cant.focus();
+  }));
+
+  // Confirmacion antes de guardar
+  panel.querySelector('form').addEventListener('submit', (ev) => {
+    const form = ev.target;
+    if (form.dataset.ok) return;
+    ev.preventDefault();
+    const v = datos[sel.value];
+    const n = parseInt(cant.value, 10) || 0;
+    if (!v || n < 1) { Swal.fire({ icon: 'warning', title: 'Faltan datos', text: 'Elige la variante y una cantidad mayor a 0.', confirmButtonText: 'Entendido' }); return; }
+    const nuevo = tipo.value === 'entrada' ? v.stock + n : v.stock - n;
+    if (nuevo < 0) { Swal.fire({ icon: 'error', title: 'Stock insuficiente', text: `Solo hay ${v.stock} unidades de ${v.sku}.`, confirmButtonText: 'Entendido' }); return; }
+    Swal.fire({ icon: 'question', title: 'Confirmar movimiento',
+      html: `<b>${v.sku}</b><br>${v.stock} → <b>${nuevo}</b> unidades<br><span class="text-secondary small">${document.getElementById('id_motivo').value}</span>`,
+      showCancelButton: true, reverseButtons: true, confirmButtonText: 'Sí, guardar', cancelButtonText: 'Revisar',
+    }).then((res) => { if (res.isConfirmed) { form.dataset.ok = '1'; form.requestSubmit(); } });
+  });
+
+  // Historial (SweetAlert2 + fetch)
+  const esc = (t) => { const d = document.createElement('div'); d.textContent = t ?? ''; return d.innerHTML; };
+  document.querySelectorAll('[data-historial]').forEach((b) => b.addEventListener('click', async () => {
+    Swal.fire({ title: 'Cargando historial', didOpen: () => Swal.showLoading() });
+    try {
+      const j = await (await fetch(b.dataset.historial)).json();
+      const filas = j.movimientos.map((m) => `<tr>
+          <td>${esc(m.fecha)}</td><td>${esc(m.tipo)}${m.referencia ? `<div class="text-secondary">${esc(m.referencia)}</div>` : ''}</td>
+          <td class="${m.entrada ? 'text-success' : 'text-danger'} fw-semibold">${m.entrada ? '+' : '-'}${m.cantidad}</td>
+          <td>${esc(m.stock)}</td><td>${esc(m.motivo)}<div class="text-secondary">${esc(m.usuario)}</div></td></tr>`).join('')
+        || '<tr><td colspan="5" class="text-center text-secondary py-4">Sin movimientos registrados.</td></tr>';
+      Swal.fire({
+        html: `<div class="swal-sp__eyebrow">${esc(j.sku)}</div><h2 class="swal-sp__h">${esc(j.variante)}</h2>
+               <p class="swal-sp__p">Stock actual: <b>${j.stock}</b> unidades</p>
+               <div class="swal-sp__tabla" style="max-height: 360px; overflow:auto;"><table style="font-size:.74rem;">
+               <thead><tr><th>Fecha</th><th>Tipo</th><th>Cant.</th><th>Stock</th><th>Motivo / responsable</th></tr></thead><tbody>${filas}</tbody></table></div>`,
+        width: 780, showCloseButton: true, closeButtonHtml: '<i class="bi bi-x-lg"></i>', confirmButtonText: 'Cerrar', buttonsStyling: false,
+        customClass: { popup: 'swal-sp', htmlContainer: 'swal-sp__html', actions: 'swal-sp__acciones', confirmButton: 'btn btn-primary w-100', closeButton: 'swal-sp__cerrar' },
+      });
+    } catch (e) {
+      Swal.fire({ icon: 'error', title: 'No se pudo cargar el historial', confirmButtonText: 'Entendido' });
+    }
+  }));
+})();
+</script>
+{% endblock %}

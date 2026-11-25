@@ -1,0 +1,113 @@
+/* ==========================================================================
+   SportPG - Panel de administracion
+   ========================================================================== */
+.panel-body { background: var(--sp-suave); }
+.panel { display: flex; min-height: 100vh; }
+
+/* Barra lateral */
+.panel__lateral { flex: 0 0 200px; background: #fff; border-right: 1px solid var(--sp-borde); display: flex; flex-direction: column; padding: 1.4rem 0 1.25rem; position: sticky; top: 0; height: 100vh; }
+.panel__marca { padding: 0 1.25rem; margin-bottom: 1.6rem; }
+.panel__seccion { font-size: .6rem; font-weight: 700; letter-spacing: .5px; color: #4b5260; text-transform: uppercase; padding: 0 1.25rem; margin-bottom: .75rem; }
+.panel__nav a { display: flex; align-items: center; gap: .6rem; font-size: .82rem; color: #4b5260; padding: .7rem 1.25rem; margin: 0 .6rem .15rem; border-radius: 2px; position: relative; }
+.panel__nav a:hover { background: var(--sp-suave); color: var(--sp-texto); }
+.panel__nav a.activa { background: #e8effc; color: var(--sp-azul); font-weight: 600; }
+.panel__nav a.activa::before { content: ''; position: absolute; left: -.6rem; top: 0; bottom: 0; width: 3px; background: var(--sp-azul); }
+.panel__nav a i { font-size: 1rem; width: 1.1rem; }
+.panel__separador { border-top: 1px solid var(--sp-borde); margin: 1rem 1.25rem; }
+.panel__tienda { font-size: .8rem; font-weight: 500; padding: .3rem 1.25rem; color: var(--sp-azul); }
+.panel__pie { margin-top: auto; padding: 0 1.25rem; font-size: .66rem; color: var(--sp-gris); }
+
+/* Contenido */
+.panel__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.panel__top { background: #fff; border-bottom: 1px solid var(--sp-borde); display: flex; align-items: center; justify-content: space-between; padding: .85rem 2rem; font-size: .74rem; color: var(--sp-gris); position: sticky; top: 0; z-index: 10; }
+.panel__top-usuario { display: flex; align-items: center; gap: .6rem; color: var(--sp-texto); font-weight: 500; }
+.panel__top-usuario button { background: none; border: 0; padding: 0; color: var(--sp-texto); font-weight: 500; font-size: .74rem; }
+.panel__top-usuario button:hover { color: var(--sp-azul); }
+.panel__contenido { padding: 2rem; max-width: 1180px; width: 100%; }
+.panel__h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -.4px; margin-bottom: .3rem; }
+.panel__sub { color: var(--sp-gris); font-size: .86rem; margin-bottom: 1.75rem; }
+.panel__subtitulo { font-size: .82rem; font-weight: 600; margin: 2.25rem 0 .9rem; }
+
+/* Tarjetas */
+.p-card { background: #fff; border: 1px solid var(--sp-borde); border-radius: 2px; }
+.p-card__cuerpo { padding: 1.25rem; }
+.p-card__cab { display: flex; justify-content: space-between; align-items: center; padding: 1.1rem 1.25rem; }
+.p-card__titulo { font-size: 1.1rem; font-weight: 700; margin: 0; }
+
+/* Pestanas subrayadas */
+.p-tabs { display: flex; gap: 2.5rem; border-bottom: 1px solid var(--sp-borde); margin-bottom: 1.4rem; padding: 0 1.25rem; background: #fff; }
+.p-tabs a { font-size: .8rem; font-weight: 500; color: #4b5260; padding: .85rem 0; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.p-tabs a.activa { color: var(--sp-azul); border-bottom-color: var(--sp-azul); }
+
+/* Barra de filtros */
+.p-filtros { display: grid; gap: 1rem; align-items: end; }
+.p-filtros .form-label { font-size: .72rem; font-weight: 600; margin-bottom: .35rem; }
+.p-filtros .form-control, .p-filtros .form-select { font-size: .8rem; }
+
+/* Tablas */
+.p-tabla { width: 100%; font-size: .8rem; border-collapse: collapse; background: #fff; }
+.p-tabla th { font-size: .7rem; font-weight: 500; color: #4b5260; background: var(--sp-suave); padding: .75rem 1rem; border-bottom: 1px solid var(--sp-borde); white-space: nowrap; }
+.p-tabla td { padding: .85rem 1rem; border-bottom: 1px solid var(--sp-borde); vertical-align: middle; }
+.p-tabla tr:last-child td { border-bottom: 0; }
+.p-tabla tr.seleccionado td { background: #eef3fd; }
+.p-tabla tfoot td { font-weight: 700; background: #fff; border-top: 1px solid var(--sp-borde); }
+.p-tabla a.accion, .p-tabla button.accion { font-size: .76rem; font-weight: 500; color: var(--sp-azul); background: none; border: 0; padding: 0; }
+.p-tabla a.accion:hover, .p-tabla button.accion:hover { text-decoration: underline; }
+
+.p-texto-estado { font-size: .76rem; font-weight: 500; }
+.alerta--normal { color: var(--sp-texto); }
+.alerta--bajo { color: var(--sp-naranja); }
+.alerta--agotado { color: #dc3545; }
+.estado--inactivo { color: var(--sp-gris); }
+
+/* Paginacion simple */
+.p-paginacion { display: flex; justify-content: space-between; align-items: center; margin-top: .9rem; font-size: .72rem; color: var(--sp-gris); }
+.p-paginacion .btn { font-size: .76rem; padding: .45rem 1.4rem; background: #fff; }
+
+/* Avisos */
+.p-aviso { background: #fdf3ea; border: 1px solid #f6d5b8; border-radius: 2px; padding: .9rem 1.1rem; margin-bottom: 1.4rem; }
+.p-aviso__titulo { color: #c25a12; font-weight: 600; font-size: .86rem; }
+.p-aviso__texto { color: #c25a12; font-size: .72rem; }
+.p-flujo { background: #eef3fd; border: 1px solid #d5e1f8; border-radius: 2px; padding: 1rem 1.2rem; font-size: .76rem; }
+.p-flujo__titulo { color: var(--sp-azul); font-weight: 600; font-size: .72rem; margin-bottom: .35rem; }
+
+/* KPIs */
+.p-kpi { background: #fff; border: 1px solid var(--sp-borde); border-radius: 2px; padding: 1.1rem 1.25rem; height: 100%; }
+.p-kpi__label { font-size: .8rem; font-weight: 500; }
+.p-kpi__valor { font-size: 2rem; font-weight: 700; letter-spacing: -.5px; line-height: 1.2; margin: .3rem 0 .25rem; }
+.p-kpi__valor--azul { color: var(--sp-azul); }
+.p-kpi__nota { font-size: .7rem; color: var(--sp-gris); }
+
+/* Arbol de categorias */
+.p-arbol { list-style: none; padding: 0; margin: 0; font-size: .82rem; }
+.p-arbol__fila { display: flex; justify-content: space-between; align-items: center; padding: .55rem .75rem; border-radius: 2px; }
+.p-arbol__fila:hover { background: var(--sp-suave); }
+.p-arbol__fila.activa { background: #e8effc; color: var(--sp-azul); }
+.p-arbol__hijos { list-style: none; padding-left: 1.75rem; margin: 0; }
+.p-arbol button.toggle { background: none; border: 0; padding: 0 .4rem 0 0; color: var(--sp-gris); font-size: .7rem; }
+.p-arbol .meta { font-size: .7rem; color: var(--sp-gris); }
+
+/* Formulario de producto */
+.p-slot { width: 96px; height: 96px; border: 1px dashed #c8cdd4; border-radius: 2px; background: var(--sp-suave); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3rem; font-size: .62rem; color: var(--sp-gris); cursor: pointer; position: relative; overflow: hidden; }
+.p-slot:hover { border-color: var(--sp-azul); color: var(--sp-azul); }
+.p-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.p-slot .p-slot__etiqueta { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, .9); text-align: center; padding: .1rem; }
+.p-slot i { font-size: 1.3rem; }
+.p-variantes .form-select, .p-variantes .form-control { font-size: .76rem; }
+.p-variantes tr.eliminada { display: none; }
+
+/* Detalle de pedido */
+.p-detalle-grid { display: grid; grid-template-columns: 1fr 260px; }
+.p-detalle-grid > div:last-child { border-left: 1px solid var(--sp-borde); }
+.p-eventos { list-style: none; padding: 0; margin: 0; font-size: .72rem; }
+.p-eventos li { padding: .45rem 0; border-bottom: 1px dashed var(--sp-borde); color: #4b5260; }
+.p-eventos li:last-child { border-bottom: 0; }
+
+@media (max-width: 991.98px) {
+  .panel { flex-direction: column; }
+  .panel__lateral { position: static; height: auto; flex: none; }
+  .panel__nav { display: flex; flex-wrap: wrap; }
+  .panel__pie { display: none; }
+  .p-detalle-grid { grid-template-columns: 1fr; }
+  .p-detalle-grid > div:last-child { border-left: 0; border-top: 1px solid var(--sp-borde); }
+}

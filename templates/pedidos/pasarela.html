@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Pago en línea{% endblock %}
+
+{% block content %}
+<div class="container-xl">
+  <nav class="sp-breadcrumb" aria-label="breadcrumb">
+    <a href="{% url 'tienda:inicio' %}">Inicio</a> &nbsp;/&nbsp; <span>Pago en línea</span>
+  </nav>
+  <h1 class="sp-h1">Pago en línea</h1>
+  <p class="sp-sub mb-4">Pedido {{ pedido.codigo }} &middot; Total {{ pedido.total|moneda }}</p>
+
+  {% include 'pedidos/_pasos.html' %}
+
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="sp-panel">
+        <div class="sp-panel__cab">
+          <h2 class="sp-panel__titulo"><i class="bi bi-shield-lock me-2"></i>Pasarela de pago</h2>
+          <span class="estado estado--alerta">Modo de pruebas</span>
+        </div>
+        <div class="sp-panel__cuerpo">
+          <p class="sp-meta">Este es un entorno de pruebas: aquí se conectará la pasarela externa real
+            (tarjeta de crédito o débito). <strong>No ingreses datos de tarjeta.</strong>
+            Elige el resultado del pago para continuar el flujo.</p>
+
+          <div class="resumen my-4">
+            <div class="resumen__fila"><span>Comercio</span><span class="fw-semibold">SportPG</span></div>
+            <div class="resumen__fila"><span>Pedido</span><span class="fw-semibold">{{ pedido.codigo }}</span></div>
+            <div class="resumen__total mt-0"><span>Total a pagar</span><span>{{ pedido.total|moneda }}</span></div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="resultado" value="aprobar">
+              <button type="submit" class="btn btn-primary w-100" data-loading="Procesando pago"><i class="bi bi-check2-circle me-2"></i>Simular pago aprobado</button>
+            </form>
+            <form method="post" data-confirm="El pedido quedará pendiente de pago. Podrás reintentar desde Mis pedidos." data-confirm-title="Simular pago rechazado" data-confirm-ok="Sí, rechazar">
+              {% csrf_token %}
+              <input type="hidden" name="resultado" value="rechazar">
+              <button type="submit" class="btn btn-outline-secondary w-100"><i class="bi bi-x-circle me-2"></i>Simular pago rechazado</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

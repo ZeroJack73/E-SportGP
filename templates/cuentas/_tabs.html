@@ -1,0 +1,5 @@
+<nav class="sp-tabs" aria-label="Mi cuenta">
+  <a href="{% url 'pedidos:lista' %}" class="{% if tab == 'pedidos' %}activa{% endif %}"><i class="bi bi-bag-check me-2"></i>Mis pedidos</a>
+  <a href="{% url 'cuentas:direcciones' %}" class="{% if tab == 'direcciones' %}activa{% endif %}"><i class="bi bi-geo-alt me-2"></i>Mis direcciones</a>
+  <a href="{% url 'cuentas:perfil' %}" class="{% if tab == 'perfil' %}activa{% endif %}"><i class="bi bi-person me-2"></i>Mi perfil</a>
+</nav>

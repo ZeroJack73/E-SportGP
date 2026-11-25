@@ -1,0 +1,11 @@
+<div class="sp-pasos" aria-label="Pasos de la compra">
+  <div class="sp-paso {% if paso == 1 %}activo{% elif paso > 1 %}hecho{% endif %}">
+    <span class="sp-paso__num">{% if paso > 1 %}<i class="bi bi-check"></i>{% else %}1{% endif %}</span>Entrega
+  </div>
+  <div class="sp-paso {% if paso == 2 %}activo{% elif paso > 2 %}hecho{% endif %}">
+    <span class="sp-paso__num">{% if paso > 2 %}<i class="bi bi-check"></i>{% else %}2{% endif %}</span>Pago en línea
+  </div>
+  <div class="sp-paso {% if paso == 3 %}activo{% endif %}">
+    <span class="sp-paso__num">3</span>Confirmación
+  </div>
+</div>
